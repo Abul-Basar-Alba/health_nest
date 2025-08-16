@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "66898048685",
+    "project_id": "healthnest-ae7bb",
+    "storage_bucket": "healthnest-ae7bb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66898048685:android:97479e97c570f09634f824",
+        "android_client_info": {
+          "package_name": "com.example.health_nest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS6M0_ZL4EKtwUJ1ieuUfW-zq--sFzkm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

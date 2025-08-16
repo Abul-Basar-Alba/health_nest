@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "healthnest"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "healthnest-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
