@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
-import '../providers/user_provider2.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   bool _isSignUp = false;
   bool _isLoading = false;
-  final AuthService _authService = AuthService();
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -24,91 +26,115 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleAuth() async {
-    setState(() => _isLoading = true);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+  Future<void> _authenticate() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
+      final authService = AuthService();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (_isSignUp) {
-        final user = await _authService.signUp(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-          _nameController.text.trim(),
+        final user = await authService.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          name: _nameController.text.trim(),
         );
-        if (user != null) {
-          userProvider.setUser(user);
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up failed')));
-        }
+        if (!mounted) return;
+        userProvider.setUser(user);
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
-        final user = await _authService.signIn(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
+        final user = await authService.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
-        if (user != null) {
-          userProvider.setUser(user);
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed')));
-        }
+        if (!mounted) return;
+        userProvider.setUser(user);
+        Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
     }
-    setState(() => _isLoading = false);
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final user = await _authService.signInWithGoogle();
-    if (user != null) {
+  Future<void> _signInWithGoogle() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final authService = AuthService();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final user = await authService.signInWithGoogle();
+      if (!mounted) return;
       userProvider.setUser(user);
       Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Google Sign-in failed')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
     }
-    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('HealthNest')),
+      appBar: AppBar(title: const Text('HealthNest')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isSignUp)
               TextField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name'),
               ),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+            if (_errorMessage != null)
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
             _isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: _handleAuth,
-                    child: Text(_isSignUp ? 'Sign Up' : 'Login'),
+                    onPressed: _authenticate,
+                    child: Text(_isSignUp ? 'Sign Up' : 'Sign In'),
                   ),
             TextButton(
-              onPressed: () => setState(() => _isSignUp = !_isSignUp),
-              child: Text(_isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'),
+              onPressed: () {
+                setState(() {
+                  _isSignUp = !_isSignUp;
+                  _errorMessage = null;
+                });
+              },
+              child:
+                  Text(_isSignUp ? 'Switch to Sign In' : 'Switch to Sign Up'),
             ),
             ElevatedButton(
-              onPressed: _handleGoogleSignIn,
-              child: Text('Sign in with Google'),
+              onPressed: _signInWithGoogle,
+              child: const Text('Sign in with Google'),
             ),
           ],
         ),

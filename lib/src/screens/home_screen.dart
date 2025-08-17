@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider2.dart';
+import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  HomeScreenState createState() => HomeScreenState();
+}
+
+class HomeScreenState extends State<HomeScreen> {
+  Future<void> _signOut() async {
+    if (!mounted) return;
+    final authService = AuthService();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await authService.signOut();
+    if (!mounted) return;
+    userProvider.setUser(null);
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final authService = AuthService();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('HealthNest'),
+        title: const Text('HealthNest'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await authService.signOut();
-              userProvider.setUser(null);
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+            icon: const Icon(Icons.logout),
+            onPressed: _signOut,
           ),
         ],
       ),
@@ -27,16 +38,29 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Welcome, ${userProvider.user?.name ?? 'User'}!', style: TextStyle(fontSize: 24)),
-            SizedBox(height: 20),
+            Text(
+              'Welcome, ${userProvider.user?.name ?? 'User'}!',
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/calculator'),
-              child: Text('Go to Calculator'),
+              child: const Text('Go to Calculator'),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/nutrition'),
-              child: Text('Go to Nutrition'),
+              child: const Text('Go to Nutrition'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/exercise'),
+              child: const Text('Go to Step Counter'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/history'),
+              child: const Text('View History'),
             ),
           ],
         ),

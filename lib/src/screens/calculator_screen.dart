@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/firestore_service.dart';
 import '../utils/calculator_utils.dart';
-import '../providers/user_provider2.dart';
 
 class CalculatorScreen extends StatefulWidget {
+  const CalculatorScreen({super.key});
+
   @override
-  _CalculatorScreenState createState() => _CalculatorScreenState();
+  CalculatorScreenState createState() => CalculatorScreenState();
 }
 
-class _CalculatorScreenState extends State<CalculatorScreen> {
+class CalculatorScreenState extends State<CalculatorScreen> {
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
   final _ageController = TextEditingController();
-  String _activityLevel = 'moderate';
-  String? _bmiResult;
-  int? _calorieResult;
-  bool _isLoading = false;
+  String _activityLevel = 'sedentary';
+  double? _bmi;
+  int? _calories;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,86 +29,94 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   Future<void> _calculate() async {
-    setState(() => _isLoading = true);
+    if (!mounted) return;
+    setState(() {
+      _errorMessage = null;
+    });
+
     try {
-      double weight = double.parse(_weightController.text);
-      double height = double.parse(_heightController.text) / 100; // cm to meters
-      int age = int.parse(_ageController.text);
+      final weight = double.parse(_weightController.text);
+      final height = double.parse(_heightController.text);
+      final age = int.parse(_ageController.text);
 
-      // Calculate BMI and Calories
-      double bmi = calculateBMI(weight, height);
-      int calories = calculateCalories(age, weight, height, _activityLevel);
+      final bmi = calculateBMI(weight, height);
+      final calories = calculateCalories(age, weight, height, _activityLevel);
 
-      // Save to Firestore
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final firestoreService = FirestoreService();
-      await firestoreService.addHistory(
-        userProvider.user!.id,
-        {
-          'bmi': bmi,
-          'calories': calories,
-          'weight': weight,
-          'height': height,
-          'age': age,
-          'activityLevel': _activityLevel,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
-      );
 
+      await firestoreService.addHistory(userProvider.user!.id, {
+        'bmi': bmi,
+        'calories': calories,
+        'weight': weight,
+        'height': height,
+        'age': age,
+        'activityLevel': _activityLevel,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+
+      if (!mounted) return;
       setState(() {
-        _bmiResult = 'BMI: ${bmi.toStringAsFixed(1)}';
-        _calorieResult = calories;
+        _bmi = bmi;
+        _calories = calories;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Invalid input: $e';
+      });
     }
-    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Health Calculator')),
+      appBar: AppBar(title: const Text('Calculator')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _weightController,
-              decoration: InputDecoration(labelText: 'Weight (kg)'),
+              decoration: const InputDecoration(labelText: 'Weight (kg)'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: _heightController,
-              decoration: InputDecoration(labelText: 'Height (cm)'),
+              decoration: const InputDecoration(labelText: 'Height (cm)'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: _ageController,
-              decoration: InputDecoration(labelText: 'Age'),
+              decoration: const InputDecoration(labelText: 'Age'),
               keyboardType: TextInputType.number,
             ),
             DropdownButton<String>(
               value: _activityLevel,
-              items: [
-                DropdownMenuItem(value: 'sedentary', child: Text('Sedentary')),
-                DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
-                DropdownMenuItem(value: 'active', child: Text('Active')),
-              ],
-              onChanged: (value) => setState(() => _activityLevel = value!),
+              items: ['sedentary', 'light', 'moderate', 'active']
+                  .map((level) => DropdownMenuItem(
+                        value: level,
+                        child: Text(level),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _activityLevel = value!;
+                });
+              },
             ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _calculate,
-                    child: Text('Calculate'),
-                  ),
-            if (_bmiResult != null) ...[
-              SizedBox(height: 20),
-              Text(_bmiResult!, style: TextStyle(fontSize: 20)),
-              Text('Daily Calories: $_calorieResult kcal', style: TextStyle(fontSize: 20)),
-            ],
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _calculate,
+              child: const Text('Calculate'),
+            ),
+            if (_errorMessage != null)
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            if (_bmi != null) Text('BMI: ${_bmi!.toStringAsFixed(1)}'),
+            if (_calories != null) Text('Daily Calories: $_calories kcal'),
           ],
         ),
       ),
