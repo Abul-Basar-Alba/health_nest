@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 
@@ -40,19 +39,14 @@ class AuthService {
     }
   }
 
-  Future<UserModel> signInWithGoogle() async {
-    throw UnimplementedError('Google sign-in is not available.');
-  }
-
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
   UserModel _getUserModel(User user) {
     return UserModel(
-      id: user.uid,
-      name: user.displayName ?? 'User',
-      email: user.email ?? '',
-    );
+        id: user.uid,
+        name: user.displayName ?? 'User',
+        email: user.email ?? '');
   }
 }

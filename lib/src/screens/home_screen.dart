@@ -46,21 +46,31 @@ class HomeScreenState extends State<HomeScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/calculator'),
               child: const Text('Go to Calculator'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.all(16)),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/nutrition'),
               child: const Text('Go to Nutrition'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.all(16)),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/exercise'),
               child: const Text('Go to Step Counter'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.all(16)),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/history'),
               child: const Text('View History'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.all(16)),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/feedback'),
+              child: const Text('Get Feedback'),
+              style: ElevatedButton.styleFrom(padding: EdgeInsets.all(16)),
             ),
           ],
         ),

@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+    <!-- Motion data permission for step counting -->
+    <key>NSMotionUsageDescription</key>
+    <string>We need access to motion data to count your steps.</string>
 </dict>
 </plist>

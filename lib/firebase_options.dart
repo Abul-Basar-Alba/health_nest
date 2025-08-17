@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'healthnest-ae7bb.firebasestorage.app',
     measurementId: 'G-QM82WZQZSD',
   );
+
 }

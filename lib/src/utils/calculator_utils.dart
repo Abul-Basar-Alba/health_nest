@@ -1,23 +1,20 @@
 double calculateBMI(double weight, double height) {
-  return weight / (height * height);
+  return weight / ((height / 100) * (height / 100));
 }
 
-int calculateCalories(int age, double weight, double height, String activityLevel) {
-  // Harris-Benedict Formula (for men, simplified)
-  double bmr = 10 * weight + 6.25 * height * 100 - 5 * age + 5;
-  double multiplier;
-  switch (activityLevel) {
+int calculateCalories(
+    int age, double weight, double height, String activityLevel) {
+  double bmr = 10 * weight + 6.25 * height - 5 * age + 5; // For males
+  switch (activityLevel.toLowerCase()) {
     case 'sedentary':
-      multiplier = 1.2;
-      break;
+      return (bmr * 1.2).round();
+    case 'light':
+      return (bmr * 1.375).round();
     case 'moderate':
-      multiplier = 1.55;
-      break;
+      return (bmr * 1.55).round();
     case 'active':
-      multiplier = 1.725;
-      break;
+      return (bmr * 1.725).round();
     default:
-      multiplier = 1.55;
+      return (bmr * 1.2).round();
   }
-  return (bmr * multiplier).toInt();
 }

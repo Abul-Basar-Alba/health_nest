@@ -16,8 +16,8 @@ class NutritionScreenState extends State<NutritionScreen> {
   List<FoodModel> _filteredFoods = [];
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     Provider.of<FirestoreService>(context, listen: false)
         .getFoods()
         .listen((foods) {
@@ -62,15 +62,28 @@ class NutritionScreenState extends State<NutritionScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _filteredFoods.length,
-              itemBuilder: (context, index) {
-                final food = _filteredFoods[index];
-                return ListTile(
-                  title: Text(food.name),
-                  subtitle: Text('Calories: ${food.calories} kcal'),
-                );
+            child: Consumer<FirestoreService>(
+              builder: (context, firestoreService, child) {
+                return _filteredFoods.isEmpty
+                    ? const Center(child: Text('No foods available'))
+                    : ListView.builder(
+                        itemCount: _filteredFoods.length,
+                        itemBuilder: (context, index) {
+                          final food = _filteredFoods[index];
+                          return ListTile(
+                            title: Text(food.name),
+                            subtitle: Text('Calories: ${food.calories} kcal'),
+                          );
+                        },
+                      );
               },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: const Text(
+              'Suggestion: Try adding chicken or vegetables to balance your diet!',
+              style: TextStyle(fontStyle: FontStyle.italic),
             ),
           ),
         ],

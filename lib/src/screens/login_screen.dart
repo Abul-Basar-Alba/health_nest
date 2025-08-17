@@ -63,29 +63,6 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final authService = AuthService();
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final user = await authService.signInWithGoogle();
-      if (!mounted) return;
-      userProvider.setUser(user);
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,10 +108,6 @@ class LoginScreenState extends State<LoginScreen> {
               },
               child:
                   Text(_isSignUp ? 'Switch to Sign In' : 'Switch to Sign Up'),
-            ),
-            ElevatedButton(
-              onPressed: _signInWithGoogle,
-              child: const Text('Sign in with Google'),
             ),
           ],
         ),

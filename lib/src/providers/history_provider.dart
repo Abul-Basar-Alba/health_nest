@@ -1,34 +1,17 @@
 import 'package:flutter/material.dart';
+import '../services/firestore_service.dart';
 import '../models/history_model.dart';
 
 class HistoryProvider with ChangeNotifier {
+  final FirestoreService _firestoreService = FirestoreService();
   List<HistoryModel> _history = [];
+
   List<HistoryModel> get history => _history;
 
-  // Example fetchHistory method
-  void fetchHistory(String userId) {
-    // TODO: Replace with Firestore fetch logic
-    _history = [
-      HistoryModel(
-        id: '1',
-        bmi: 22.5,
-        calories: 1800,
-        weight: 70,
-        height: 1.75,
-        age: 25,
-        activityLevel: 'moderate',
-        steps: 8000,
-        timestamp: DateTime.now(),
-      ),
-    ];
-    notifyListeners();
-  }
-
-  // Undo last history entry
-  void undoLast() {
-    if (_history.isNotEmpty) {
-      _history.removeLast();
+  Future<void> fetchHistory(String userId) async {
+    _firestoreService.getHistory(userId).listen((history) {
+      _history = history;
       notifyListeners();
-    }
+    });
   }
 }

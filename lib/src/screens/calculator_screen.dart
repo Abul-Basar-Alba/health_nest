@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:health_nest/src/providers/user_provider.dart';
+import 'package:health_nest/src/services/firestore_service.dart';
+import 'package:health_nest/src/utils/calculator_utils.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/firestore_service.dart';
@@ -18,6 +21,8 @@ class CalculatorScreenState extends State<CalculatorScreen> {
   String _activityLevel = 'sedentary';
   double? _bmi;
   int? _calories;
+  double? _protein;
+  double? _waterIntake;
   String? _errorMessage;
 
   @override
@@ -41,6 +46,8 @@ class CalculatorScreenState extends State<CalculatorScreen> {
 
       final bmi = calculateBMI(weight, height);
       final calories = calculateCalories(age, weight, height, _activityLevel);
+      final protein = weight * 0.8; // Rough estimate (g)
+      final waterIntake = weight * 0.033; // Rough estimate (liters)
 
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final firestoreService = FirestoreService();
@@ -48,6 +55,8 @@ class CalculatorScreenState extends State<CalculatorScreen> {
       await firestoreService.addHistory(userProvider.user!.id, {
         'bmi': bmi,
         'calories': calories,
+        'protein': protein,
+        'waterIntake': waterIntake,
         'weight': weight,
         'height': height,
         'age': age,
@@ -59,6 +68,8 @@ class CalculatorScreenState extends State<CalculatorScreen> {
       setState(() {
         _bmi = bmi;
         _calories = calories;
+        _protein = protein;
+        _waterIntake = waterIntake;
       });
     } catch (e) {
       if (!mounted) return;
@@ -117,6 +128,10 @@ class CalculatorScreenState extends State<CalculatorScreen> {
               ),
             if (_bmi != null) Text('BMI: ${_bmi!.toStringAsFixed(1)}'),
             if (_calories != null) Text('Daily Calories: $_calories kcal'),
+            if (_protein != null)
+              Text('Protein: ${_protein!.toStringAsFixed(1)} g'),
+            if (_waterIntake != null)
+              Text('Water Intake: ${_waterIntake!.toStringAsFixed(1)} L'),
           ],
         ),
       ),
