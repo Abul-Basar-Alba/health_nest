@@ -1,92 +1,111 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/firestore_service.dart';
-import '../models/food_model.dart';
 
-class NutritionScreen extends StatefulWidget {
+class NutritionScreen extends StatelessWidget {
   const NutritionScreen({super.key});
 
   @override
-  NutritionScreenState createState() => NutritionScreenState();
-}
-
-class NutritionScreenState extends State<NutritionScreen> {
-  final _searchController = TextEditingController();
-  List<FoodModel> _foods = [];
-  List<FoodModel> _filteredFoods = [];
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    Provider.of<FirestoreService>(context, listen: false)
-        .getFoods()
-        .listen((foods) {
-      if (!mounted) return;
-      setState(() {
-        _foods = foods;
-        _filteredFoods = foods;
-      });
-    });
-    _searchController.addListener(_filterFoods);
-  }
-
-  void _filterFoods() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredFoods = _foods
-          .where((food) => food.name.toLowerCase().contains(query))
-          .toList();
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nutrition')),
-      body: Column(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search Food',
-                border: OutlineInputBorder(),
+          Text(
+            'Your Nutrition Log',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.green[800],
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Adding a new meal...')),
+                );
+              },
+              icon: const Icon(Icons.add_circle_outline_rounded),
+              label: const Text('Add New Meal'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
               ),
             ),
           ),
-          Expanded(
-            child: Consumer<FirestoreService>(
-              builder: (context, firestoreService, child) {
-                return _filteredFoods.isEmpty
-                    ? const Center(child: Text('No foods available'))
-                    : ListView.builder(
-                        itemCount: _filteredFoods.length,
-                        itemBuilder: (context, index) {
-                          final food = _filteredFoods[index];
-                          return ListTile(
-                            title: Text(food.name),
-                            subtitle: Text('Calories: ${food.calories} kcal'),
-                          );
-                        },
-                      );
-              },
-            ),
+          const SizedBox(height: 20),
+          Text(
+            'Recent Meals',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.green[700],
+                  fontWeight: FontWeight.w700,
+                ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: const Text(
-              'Suggestion: Try adding chicken or vegetables to balance your diet!',
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
+          const SizedBox(height: 16),
+          _buildMealEntry(
+            context,
+            mealType: 'Breakfast',
+            items: 'Oats, Berries, Nuts',
+            calories: '350 kcal',
+            date: 'Aug 18, 2025',
+          ),
+          _buildMealEntry(
+            context,
+            mealType: 'Lunch',
+            items: 'Chicken Salad, Quinoa',
+            calories: '480 kcal',
+            date: 'Aug 18, 2025',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMealEntry(BuildContext context,
+      {required String mealType,
+      required String items,
+      required String calories,
+      required String date}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              mealType,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              items,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  calories,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[700],
+                      ),
+                ),
+                Text(
+                  date,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

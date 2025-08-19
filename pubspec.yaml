@@ -16,6 +16,9 @@
        provider: ^6.1.2
        cupertino_icons: ^1.0.8
        pedometer: ^4.1.1
+       font_awesome_flutter: ^10.10.0
+       intl: ^0.20.2
+       url_launcher: ^6.3.2
 
      dev_dependencies:
        flutter_test:
@@ -27,4 +30,11 @@
        assets:
          - assets/images/
          - assets/documents/
-  
+         - assets/fonts/
+       fonts:
+         - family: CustomFont
+           fonts:
+             - asset: assets/fonts/CustomFont-Regular.ttf
+               weight: 400
+             - asset: assets/fonts/CustomFont-Bold.ttf
+               weight: 700

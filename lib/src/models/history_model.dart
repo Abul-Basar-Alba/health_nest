@@ -5,7 +5,8 @@ class HistoryModel {
   final double? protein;
   final double? waterIntake;
   final int? steps;
-  final String timestamp;
+  final DateTime date;
+  final String timestamp; // ISO 8601 string for easy sorting
 
   HistoryModel({
     required this.id,
@@ -14,6 +15,7 @@ class HistoryModel {
     this.protein,
     this.waterIntake,
     this.steps,
+    required this.date,
     required this.timestamp,
   });
 
@@ -25,7 +27,19 @@ class HistoryModel {
       protein: (map['protein'] as num?)?.toDouble(),
       waterIntake: (map['waterIntake'] as num?)?.toDouble(),
       steps: (map['steps'] as num?)?.toInt(),
+      date: DateTime.parse(map['timestamp']),
       timestamp: map['timestamp'] as String? ?? '',
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'bmi': bmi,
+      'calories': calories,
+      'protein': protein,
+      'waterIntake': waterIntake,
+      'steps': steps,
+      'timestamp': timestamp,
+    };
   }
 }

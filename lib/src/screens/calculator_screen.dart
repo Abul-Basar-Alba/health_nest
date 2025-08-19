@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/providers/user_provider.dart';
-import 'package:health_nest/src/services/firestore_service.dart';
-import 'package:health_nest/src/utils/calculator_utils.dart';
-import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
-import '../services/firestore_service.dart';
 import '../utils/calculator_utils.dart';
+import '../utils/validators.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -15,66 +10,56 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class CalculatorScreenState extends State<CalculatorScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
-  final _ageController = TextEditingController();
-  String _activityLevel = 'sedentary';
-  double? _bmi;
-  int? _calories;
-  double? _protein;
-  double? _waterIntake;
-  String? _errorMessage;
+  String? _selectedActivityLevel;
+  bool _isMale = true;
+  double _bmiResult = 0.0;
+  double _dailyCalories = 0.0;
+  Map<String, double> _macros = {};
+  double _waterNeeds = 0.0;
+  String _vitaminRecs = '';
+  bool _showResult = false;
+
+  final Map<String, double> _activityLevels = {
+    'Sedentary': 1.2,
+    'Lightly Active': 1.375,
+    'Moderately Active': 1.55,
+    'Very Active': 1.725,
+    'Extremely Active': 1.9,
+  };
 
   @override
   void dispose() {
+    _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
-    _ageController.dispose();
     super.dispose();
   }
 
-  Future<void> _calculate() async {
-    if (!mounted) return;
-    setState(() {
-      _errorMessage = null;
-    });
-
-    try {
+  void _calculateHealthMetrics() {
+    if (_formKey.currentState!.validate()) {
+      final age = int.parse(_ageController.text);
       final weight = double.parse(_weightController.text);
       final height = double.parse(_heightController.text);
-      final age = int.parse(_ageController.text);
+      final activityMultiplier = _activityLevels[_selectedActivityLevel]!;
 
-      final bmi = calculateBMI(weight, height);
-      final calories = calculateCalories(age, weight, height, _activityLevel);
-      final protein = weight * 0.8; // Rough estimate (g)
-      final waterIntake = weight * 0.033; // Rough estimate (liters)
-
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final firestoreService = FirestoreService();
-
-      await firestoreService.addHistory(userProvider.user!.id, {
-        'bmi': bmi,
-        'calories': calories,
-        'protein': protein,
-        'waterIntake': waterIntake,
-        'weight': weight,
-        'height': height,
-        'age': age,
-        'activityLevel': _activityLevel,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-
-      if (!mounted) return;
       setState(() {
-        _bmi = bmi;
-        _calories = calories;
-        _protein = protein;
-        _waterIntake = waterIntake;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'Invalid input: $e';
+        _bmiResult =
+            CalculatorUtils.calculateBMI(weight: weight, height: height);
+        _dailyCalories = CalculatorUtils.calculateDailyCalories(
+          age: age,
+          weight: weight,
+          height: height,
+          activityMultiplier: activityMultiplier,
+          isMale: _isMale,
+        );
+        _macros = CalculatorUtils.calculateMacronutrients(_dailyCalories);
+        _waterNeeds = CalculatorUtils.calculateWaterNeeds(weight);
+        _vitaminRecs = CalculatorUtils.getVitaminRecommendations(age, _isMale);
+        _showResult = true;
       });
     }
   }
@@ -82,58 +67,279 @@ class CalculatorScreenState extends State<CalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calculator')),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Health Calculator'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _weightController,
-              decoration: const InputDecoration(labelText: 'Weight (kg)'),
-              keyboardType: TextInputType.number,
+            Text(
+              'Your Health Data',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            TextField(
-              controller: _heightController,
-              decoration: const InputDecoration(labelText: 'Height (cm)'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: _ageController,
-              decoration: const InputDecoration(labelText: 'Age'),
-              keyboardType: TextInputType.number,
-            ),
-            DropdownButton<String>(
-              value: _activityLevel,
-              items: ['sedentary', 'light', 'moderate', 'active']
-                  .map((level) => DropdownMenuItem(
-                        value: level,
-                        child: Text(level),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _activityLevel = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calculate,
-              child: const Text('Calculate'),
-            ),
-            if (_errorMessage != null)
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+            const SizedBox(height: 16),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _ageController,
+                          decoration: const InputDecoration(
+                            labelText: 'Age (years)',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) =>
+                              Validators.validateNumber(value, 'Age'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _weightController,
+                          decoration: const InputDecoration(
+                            labelText: 'Weight (kg)',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) =>
+                              Validators.validateNumber(value, 'Weight'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _heightController,
+                          decoration: const InputDecoration(
+                            labelText: 'Height (cm)',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) =>
+                              Validators.validateNumber(value, 'Height'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Activity Level',
+                      border: OutlineInputBorder(),
+                    ),
+                    value: _selectedActivityLevel,
+                    items: _activityLevels.keys.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedActivityLevel = newValue;
+                      });
+                    },
+                    validator: (value) => value == null
+                        ? 'Please select an activity level.'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildGenderToggle(
+                          label: 'Male',
+                          isSelected: _isMale,
+                          onTap: () => setState(() => _isMale = true)),
+                      const SizedBox(width: 16),
+                      _buildGenderToggle(
+                          label: 'Female',
+                          isSelected: !_isMale,
+                          onTap: () => setState(() => _isMale = false)),
+                    ],
+                  ),
+                ],
               ),
-            if (_bmi != null) Text('BMI: ${_bmi!.toStringAsFixed(1)}'),
-            if (_calories != null) Text('Daily Calories: $_calories kcal'),
-            if (_protein != null)
-              Text('Protein: ${_protein!.toStringAsFixed(1)} g'),
-            if (_waterIntake != null)
-              Text('Water Intake: ${_waterIntake!.toStringAsFixed(1)} L'),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _calculateHealthMetrics,
+                child: const Text('Calculate'),
+              ),
+            ),
+            if (_showResult) ...[
+              const SizedBox(height: 32),
+              _buildResultCard(
+                context,
+                title: 'Your BMI & Daily Calories',
+                children: [
+                  _buildResultRow(
+                    label: 'BMI',
+                    value: _bmiResult.toStringAsFixed(2),
+                    unit: _getBmiCategory(_bmiResult),
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildResultRow(
+                    label: 'Daily Calories',
+                    value: _dailyCalories.toStringAsFixed(0),
+                    unit: 'kcal',
+                    color: Colors.orange,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildResultCard(
+                context,
+                title: 'Nutritional Breakdown',
+                children: [
+                  _buildResultRow(
+                    label: 'Protein',
+                    value: _macros['protein']!.toString(),
+                    unit: 'grams',
+                    color: Colors.green,
+                  ),
+                  _buildResultRow(
+                    label: 'Fat',
+                    value: _macros['fat']!.toString(),
+                    unit: 'grams',
+                    color: Colors.redAccent,
+                  ),
+                  _buildResultRow(
+                    label: 'Carbohydrates',
+                    value: _macros['carbohydrates']!.toString(),
+                    unit: 'grams',
+                    color: Colors.amber,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildResultCard(
+                context,
+                title: 'Hydration & Vitamins',
+                children: [
+                  _buildResultRow(
+                    label: 'Water',
+                    value: _waterNeeds.toString(),
+                    unit: 'liters',
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Vitamin Recommendations:',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _vitaminRecs,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildGenderToggle(
+      {required String label,
+      required bool isSelected,
+      required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade400,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getBmiCategory(double bmi) {
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi >= 18.5 && bmi <= 24.9) return 'Normal weight';
+    if (bmi >= 25 && bmi <= 29.9) return 'Overweight';
+    if (bmi >= 30) return 'Obesity';
+    return '';
+  }
+
+  Widget _buildResultCard(BuildContext context,
+      {required String title, required List<Widget> children}) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+            ),
+            const Divider(height: 20),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultRow({
+    required String label,
+    required String value,
+    required String unit,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+          ),
+          Text(
+            '$value $unit',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+          ),
+        ],
       ),
     );
   }

@@ -1,52 +1,51 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
-import '../models/food_model.dart';
+import '../models/user_model.dart';
 import '../models/history_model.dart';
+import '../models/food_model.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<void> addHistory(String userId, Map<String, dynamic> data) async {
-    try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('history')
-          .add(data);
-    } catch (e) {
-      debugPrint('Firestore error: $e');
-      rethrow;
+  // User Management
+  Future<void> saveUserData(UserModel user) async {
+    await _db.collection('users').doc(user.id).set(user.toMap());
+  }
+
+  Future<UserModel> getUserData(String userId) async {
+    DocumentSnapshot doc = await _db.collection('users').doc(userId).get();
+    if (!doc.exists) {
+      throw Exception('User data not found.');
     }
+    return UserModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+  }
+
+  // History Management
+  Future<void> saveHistory(String userId, HistoryModel history) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('history')
+        .add(history.toMap());
   }
 
   Stream<List<HistoryModel>> getHistory(String userId) {
-    return _firestore
+    return _db
         .collection('users')
         .doc(userId)
         .collection('history')
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => HistoryModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+        .map((snapshot) => snapshot.docs
+            .map((doc) => HistoryModel.fromMap(doc.data(), doc.id))
+            .toList());
   }
 
-  Stream<List<FoodModel>> getFoods() {
-    return _firestore.collection('foods').snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => FoodModel.fromMap(doc.data()))
-              .toList(),
-        );
-  }
-
-  Future<void> addFood(FoodModel food) async {
-    try {
-      await _firestore.collection('foods').doc(food.id).set(food.toMap());
-    } catch (e) {
-      debugPrint('Firestore error: $e');
-      rethrow;
-    }
+  // Food Management
+  Future<void> saveFoodEntry(String userId, FoodModel food) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('food_log')
+        .add(food.toMap());
   }
 }

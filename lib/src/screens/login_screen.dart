@@ -36,6 +36,7 @@ class LoginScreenState extends State<LoginScreen> {
     try {
       final authService = AuthService();
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+
       if (_isSignUp) {
         final user = await authService.signUp(
           email: _emailController.text.trim(),
@@ -44,7 +45,8 @@ class LoginScreenState extends State<LoginScreen> {
         );
         if (!mounted) return;
         userProvider.setUser(user);
-        Navigator.pushReplacementNamed(context, '/home');
+        await Future.delayed(const Duration(milliseconds: 500));
+        Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         final user = await authService.signIn(
           email: _emailController.text.trim(),
@@ -52,7 +54,8 @@ class LoginScreenState extends State<LoginScreen> {
         );
         if (!mounted) return;
         userProvider.setUser(user);
-        Navigator.pushReplacementNamed(context, '/home');
+        await Future.delayed(const Duration(milliseconds: 500));
+        Navigator.pushReplacementNamed(context, '/dashboard');
       }
     } catch (e) {
       if (!mounted) return;
@@ -66,50 +69,90 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('HealthNest')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_isSignUp)
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                Icons.spa_rounded,
+                size: 80,
+                color: Colors.green[700],
               ),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            if (_errorMessage != null)
+              const SizedBox(height: 16),
               Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                'HealthNest',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.green[800],
+                      fontWeight: FontWeight.w900,
+                    ),
+                textAlign: TextAlign.center,
               ),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _authenticate,
-                    child: Text(_isSignUp ? 'Sign Up' : 'Sign In'),
+              const SizedBox(height: 40),
+              if (_isSignUp)
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
                   ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isSignUp = !_isSignUp;
-                  _errorMessage = null;
-                });
-              },
-              child:
-                  Text(_isSignUp ? 'Switch to Sign In' : 'Switch to Sign Up'),
-            ),
-          ],
+                ),
+              if (_isSignUp) const SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 24),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _authenticate,
+                      child: Text(_isSignUp ? 'Sign Up' : 'Sign In'),
+                    ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isSignUp = !_isSignUp;
+                    _errorMessage = null;
+                  });
+                },
+                child: Text(
+                  _isSignUp
+                      ? 'Already have an account? Sign In'
+                      : 'Don\'t have an account? Sign Up',
+                  style: TextStyle(color: Colors.green[700]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
