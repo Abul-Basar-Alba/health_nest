@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import 'firestore_service.dart';
 
@@ -13,18 +12,23 @@ class AuthService {
     required String name,
   }) async {
     try {
+      // 1. Authenticate with Firebase Auth
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
       User? user = userCredential.user;
+
       if (user != null) {
+        // 2. Create a new UserModel
         UserModel newUser = UserModel(
           id: user.uid,
           name: name,
           email: email,
         );
+
+        // 3. Save the user data to Firestore
         await _firestoreService.saveUserData(newUser);
         return newUser;
       }
@@ -46,12 +50,15 @@ class AuthService {
     required String password,
   }) async {
     try {
+      // 1. Authenticate with Firebase Auth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       User? user = userCredential.user;
+
       if (user != null) {
+        // 2. Fetch the user data from Firestore
         return await _firestoreService.getUserData(user.uid);
       }
       throw Exception('Sign in failed. Invalid email or password.');

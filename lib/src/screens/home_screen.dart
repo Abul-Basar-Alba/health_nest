@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/history_provider.dart';
 import '../providers/user_provider.dart';
-import '../widgets/progress_indicator.dart'; // Ensure you have this widget
+// Ensure you have this widget
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

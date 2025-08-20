@@ -3,7 +3,10 @@ import 'package:pedometer/pedometer.dart';
 
 class PedometerService {
   late Stream<StepCount> _stepCountStream;
-  int _currentSteps = 0;
+  late StreamSubscription<StepCount> _subscription;
+
+  // Use a StreamController to expose a simple stream of steps
+  final _stepCountController = StreamController<int>.broadcast();
 
   PedometerService() {
     _initPedometer();
@@ -11,7 +14,7 @@ class PedometerService {
 
   void _initPedometer() {
     _stepCountStream = Pedometer.stepCountStream;
-    _stepCountStream.listen(
+    _subscription = _stepCountStream.listen(
       _onStepCount,
       onError: _onStepCountError,
       cancelOnError: true,
@@ -19,14 +22,21 @@ class PedometerService {
   }
 
   void _onStepCount(StepCount event) {
-    // You may need to handle step count resetting at midnight
-    _currentSteps = event.steps;
+    // We only send the latest steps to our controller
+    _stepCountController.add(event.steps);
   }
 
   void _onStepCountError(error) {
     print('Pedometer error: $error');
+    _stepCountController.addError('Pedometer service error');
   }
 
-  Stream<int> get stepCountStream =>
-      _stepCountStream.map((event) => event.steps);
+  // Public getter to expose the stream
+  Stream<int> get stepCountStream => _stepCountController.stream;
+
+  // Don't forget to dispose of the stream controller and subscription
+  void dispose() {
+    _subscription.cancel();
+    _stepCountController.close();
+  }
 }

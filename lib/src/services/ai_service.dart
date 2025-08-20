@@ -24,10 +24,12 @@ class AiService {
         final data = json.decode(response.body);
         return data['recommendation'] as String;
       } else {
+        // Provide a more specific error message based on the status code
         throw Exception(
             'Failed to get recommendation from AI. Status: ${response.statusCode}');
       }
     } catch (e) {
+      // Re-throw with a more descriptive message to help with debugging
       throw Exception('Failed to connect to the AI service: $e');
     }
   }

@@ -134,7 +134,7 @@ class CalculatorScreenState extends State<CalculatorScreen> {
                       labelText: 'Activity Level',
                       border: OutlineInputBorder(),
                     ),
-                    value: _selectedActivityLevel,
+                    initialValue: _selectedActivityLevel,
                     items: _activityLevels.keys.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,

@@ -42,19 +42,24 @@ class FeedbackScreenState extends State<FeedbackScreen> {
         history.where((item) => item.steps != null).length;
 
     String feedback = 'Based on your data:\n';
-    if (avgBmi > 25)
+    if (avgBmi > 25) {
       feedback +=
           '- Your BMI ($avgBmi) is high. Consider reducing calorie intake.\n';
-    if (avgBmi < 18.5)
+    }
+    if (avgBmi < 18.5) {
       feedback += '- Your BMI ($avgBmi) is low. Increase calorie intake.\n';
-    if (avgCalories < 1800)
+    }
+    if (avgCalories < 1800) {
       feedback +=
           '- Your calorie intake ($avgCalories kcal) is low. Eat more nutritious food.\n';
-    if (avgSteps < 5000)
+    }
+    if (avgSteps < 5000) {
       feedback +=
           '- Your steps ($avgSteps) are low. Aim for 5000+ steps daily.\n';
-    if (feedback == 'Based on your data:\n')
+    }
+    if (feedback == 'Based on your data:\n') {
       feedback += 'You are doing great! Keep it up!';
+    }
     return feedback;
   }
 

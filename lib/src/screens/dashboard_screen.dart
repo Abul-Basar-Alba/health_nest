@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart'; // Assume this provider holds user data
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});

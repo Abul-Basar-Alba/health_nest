@@ -57,7 +57,7 @@ class _StepTrackingScreenState extends State<StepTrackingScreen> {
                         strokeWidth: 15,
                         backgroundColor: Colors.grey[200],
                         valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.green.shade600!),
+                            Colors.green.shade600),
                       ),
                     ),
                     Column(
@@ -148,10 +148,10 @@ class _StepTrackingScreenState extends State<StepTrackingScreen> {
                               content: Text('Starting an audio workout!')),
                         );
                       },
-                      child: const Text('Start Workout'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[600],
                       ),
+                      child: const Text('Start Workout'),
                     ),
                   ),
                 ],

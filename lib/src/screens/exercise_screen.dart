@@ -79,7 +79,7 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${steps.toString()}',
+                        steps.toString(),
                         style:
                             Theme.of(context).textTheme.displaySmall?.copyWith(
                                   fontWeight: FontWeight.bold,

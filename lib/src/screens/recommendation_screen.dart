@@ -139,8 +139,9 @@ class RecommendationScreen extends StatelessWidget {
   }
 
   String _generateNutritionTips(List<HistoryModel> history) {
-    if (history.isEmpty)
+    if (history.isEmpty) {
       return 'No nutrition data available. Start by logging your meals!';
+    }
     final avgCalories = history
         .where((item) => item.calories != null)
         .map((item) => item.calories!)
@@ -155,8 +156,9 @@ class RecommendationScreen extends StatelessWidget {
   }
 
   String _generateExerciseTips(List<HistoryModel> history) {
-    if (history.isEmpty)
+    if (history.isEmpty) {
       return 'No exercise data available. Start logging your steps!';
+    }
     final avgSteps = history
         .where((item) => item.steps != null)
         .map((item) => item.steps!.toDouble())
@@ -173,8 +175,9 @@ class RecommendationScreen extends StatelessWidget {
   String _generateWaterTips(List<HistoryModel> history) {
     final historyWithWater =
         history.where((h) => h.waterIntake != null).toList();
-    if (historyWithWater.isEmpty)
+    if (historyWithWater.isEmpty) {
       return 'Log your water intake to get personalized hydration tips!';
+    }
     final avgWater = historyWithWater.map((h) => h.waterIntake!).average;
 
     if (avgWater < 2.0) {

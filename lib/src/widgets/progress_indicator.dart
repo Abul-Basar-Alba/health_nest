@@ -6,11 +6,11 @@ class ProgressIndicatorWidget extends StatelessWidget {
   final String label;
 
   const ProgressIndicatorWidget({
-    Key? key,
+    super.key,
     required this.goal,
     required this.currentValue,
     required this.label,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -6,6 +6,9 @@ class UserModel {
   final double? height; // in cm
   final double? weight; // in kg
   final bool isPremium;
+  final bool isProfilePublic;
+  final String? profileImageUrl;
+  final double? bmi;
 
   UserModel({
     required this.id,
@@ -15,6 +18,9 @@ class UserModel {
     this.height,
     this.weight,
     this.isPremium = false,
+    this.profileImageUrl,
+    this.bmi,
+    this.isProfilePublic = false,
   });
 
   // Factory constructor to create a UserModel from a Firestore map
@@ -27,6 +33,9 @@ class UserModel {
       height: (map['height'] as num?)?.toDouble(),
       weight: (map['weight'] as num?)?.toDouble(),
       isPremium: map['isPremium'] as bool? ?? false,
+      profileImageUrl: map['profileImageUrl'] as String?,
+      bmi: (map['bmi'] as num?)?.toDouble(),
+      isProfilePublic: map['isProfilePublic'] as bool? ?? false,
     );
   }
 
@@ -39,6 +48,16 @@ class UserModel {
       'height': height,
       'weight': weight,
       'isPremium': isPremium,
+      'profileImageUrl': profileImageUrl,
+      'bmi': bmi,
+      'isProfilePublic': isProfilePublic,
     };
+  }
+
+  double? get calculatedBmi {
+    if (weight != null && height != null && height! > 0) {
+      return weight! / ((height! / 100) * (height! / 100));
+    }
+    return null;
   }
 }
