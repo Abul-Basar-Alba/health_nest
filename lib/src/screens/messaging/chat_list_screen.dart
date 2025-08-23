@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/user_provider.dart';
 import '../../providers/chat_provider.dart';
-import '../../constants/app_strings.dart';
+import '../../providers/user_provider.dart';
+import '../../models/user_model.dart';
+import 'chat_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -15,80 +16,113 @@ class ChatListScreenState extends State<ChatListScreen> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
-    if (user != null) {
-      Provider.of<ChatProvider>(context, listen: false)
-          .fetchConversations(user.id);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final userId = userProvider.user?.id;
+    if (userId != null) {
+      chatProvider.fetchConversations(userId);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
     final chatProvider = Provider.of<ChatProvider>(context);
-    final user = userProvider.user;
+    final currentUserId = Provider.of<UserProvider>(context).user?.id;
 
-    if (user == null) {
-      return const Center(child: Text('Please log in to view messages.'));
-    }
-
+    // This is the fix that was implemented: the Scaffold widget.
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.chatListTitle),
+        title: const Text('Messages'),
         centerTitle: true,
       ),
       body: chatProvider.conversations.isEmpty
-          ? const Center(child: Text(AppStrings.noMessagesYet))
+          ? const Center(
+              child: Text(
+                'No messages yet. Start a conversation!',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            )
           : ListView.builder(
               itemCount: chatProvider.conversations.length,
               itemBuilder: (context, index) {
                 final conversation = chatProvider.conversations[index];
                 final otherUserId = conversation.participants.firstWhere(
-                  (id) => id != user.id,
-                  orElse: () => user
-                      .id, // Fallback for single-user chat (e.g., with admin)
+                  (id) => id != currentUserId,
                 );
 
-                // Fetch other user's profile to display name and image
-                // For a real app, this should be done efficiently (e.g., by fetching user data once)
-                final otherUser = chatProvider
-                    .conversations[index]; // Placeholder for simplicity
-
-                return Card(
-                  elevation: 2,
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      radius: 25,
-                      backgroundImage: NetworkImage(
-                          'https://via.placeholder.com/150'), // Placeholder image
-                    ),
-                    title: Text(
-                      'User ID: $otherUserId', // In a real app, replace with user name
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      conversation.lastMessage,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Text(
-                      '${conversation.lastMessageTimestamp.hour}:${conversation.lastMessageTimestamp.minute}',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/chat', arguments: {
-                        'chatId': conversation.id,
-                        'otherUserId': otherUserId,
-                      });
-                    },
-                  ),
+                return FutureBuilder<UserModel?>(
+                  future: Provider.of<UserProvider>(context, listen: false)
+                      .getUserById(otherUserId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const ListTile(
+                        title: Text('Loading user...'),
+                        subtitle: Text('Loading...'),
+                      );
+                    }
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return ListTile(
+                        title: Text(otherUserId),
+                        subtitle: Text(conversation.lastMessage),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                chatId: conversation.id,
+                                otherUserId: otherUserId,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }
+                    final otherUser = snapshot.data;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: otherUser?.profileImageUrl != null
+                            ? NetworkImage(otherUser!.profileImageUrl!)
+                            : const AssetImage(
+                                    'assets/images/default_avatar.png')
+                                as ImageProvider,
+                      ),
+                      title: Text(otherUser?.name ?? 'Unknown User'),
+                      subtitle: Text(conversation.lastMessage),
+                      trailing: Text(
+                        _formatTimestamp(conversation.lastMessageTimestamp),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                              chatId: conversation.id,
+                              otherUserId: otherUserId,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 );
               },
             ),
     );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes} min ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours} hours ago';
+    } else {
+      return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+    }
   }
 }

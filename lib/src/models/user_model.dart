@@ -1,4 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
+  // Static method to create a UserModel from Firestore DocumentSnapshot
+  static UserModel fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UserModel.fromMap(doc.id, data);
+  }
+
   final String id;
   final String name;
   final String email;

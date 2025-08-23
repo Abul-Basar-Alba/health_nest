@@ -12,7 +12,6 @@ class AuthService {
     required String name,
   }) async {
     try {
-      // 1. Authenticate with Firebase Auth
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -21,14 +20,12 @@ class AuthService {
       User? user = userCredential.user;
 
       if (user != null) {
-        // 2. Create a new UserModel
         UserModel newUser = UserModel(
           id: user.uid,
           name: name,
           email: email,
         );
 
-        // 3. Save the user data to Firestore
         await _firestoreService.saveUserData(newUser);
         return newUser;
       }
@@ -50,7 +47,6 @@ class AuthService {
     required String password,
   }) async {
     try {
-      // 1. Authenticate with Firebase Auth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -58,15 +54,17 @@ class AuthService {
       User? user = userCredential.user;
 
       if (user != null) {
-        // 2. Fetch the user data from Firestore
         return await _firestoreService.getUserData(user.uid);
       }
       throw Exception('Sign in failed. Invalid email or password.');
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+      // Use the 'invalid-credential' error code, which is more common in newer Firebase versions.
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
         throw Exception('Invalid email or password.');
       }
-      throw Exception(e.message ?? 'An unknown error occurred.');
+      throw Exception(e.message ?? 'An unknown authentication error occurred.');
     } catch (e) {
       rethrow;
     }

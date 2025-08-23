@@ -1,40 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/screens/onboarding/signup_screen.dart';
+import 'package:health_nest/src/screens/step_count_screen.dart';
 import 'package:health_nest/src/widgets/main_navigation.dart';
+import 'package:health_nest/src/models/user_model.dart'; // Import UserModel
 
 // Authentication Screens
 import '../screens/onboarding/login_screen.dart';
+import '../screens/onboarding/profile_setup_screen.dart';
 
 // Core Screens
 import '../screens/home_screen.dart';
 import '../screens/nutrition_screen.dart';
 import '../screens/exercise_screen.dart';
 import '../screens/history_screen.dart';
-import '../screens/community_screen.dart';
+import '../screens/community/community_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/documentation_screen.dart';
 import '../screens/paid_services_screen.dart';
+import '../screens/admin_contact_screen.dart';
+import '../screens/calculator_screen.dart';
+import '../screens/recommendation_screen.dart';
 
 // Messaging Screens
 import '../screens/messaging/chat_list_screen.dart';
 import '../screens/messaging/chat_screen.dart';
 import '../screens/messaging/profile_view_screen.dart';
 
-// Main Navigation Widget
-
 class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
-  static const String mainNavigation = '/'; // Root route for the main app UI
+  static const String profileSetup = '/profile-setup';
+  static const String mainNavigation = '/';
   static const String home = '/home';
   static const String nutrition = '/nutrition';
   static const String exercise = '/exercise';
   static const String history = '/history';
   static const String community = '/community';
-  static const String aiCoach = '/ai-coach';
+  static const String calculator = '/calculator';
+  static const String recommendations = '/recommendations';
+  static const String adminContact = '/admin-contact';
   static const String profile = '/profile';
   static const String documentation = '/documentation';
   static const String paidServices = '/paid-services';
+  static const String stepCount = '/step-count';
 
   // Messaging routes
   static const String chatList = '/chat-list';
@@ -45,25 +53,50 @@ class AppRoutes {
     return {
       login: (context) => const LoginScreen(),
       signup: (context) => const SignUpScreen(),
+      profileSetup: (context) => const ProfileSetupScreen(),
       mainNavigation: (context) => const MainNavigation(),
       home: (context) => const HomeScreen(),
       nutrition: (context) => const NutritionScreen(),
       exercise: (context) => const ExerciseScreen(),
       history: (context) => const HistoryScreen(),
       community: (context) => const CommunityScreen(),
+      calculator: (context) => const CalculatorScreen(),
+      recommendations: (context) => const RecommendationScreen(),
+      adminContact: (context) => const AdminContactScreen(),
       profile: (context) => const ProfileScreen(),
       documentation: (context) => const DocumentationScreen(),
       paidServices: (context) => const PaidServicesScreen(),
+      stepCount: (context) => const StepTrackingScreen(),
       chatList: (context) => const ChatListScreen(),
-      chat: (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return ChatScreen(
-          chatId: args['chatId'] as String,
-          otherUserId: args['otherUserId'] as String,
-        );
-      },
-      profileView: (context) => const ProfileViewScreen(),
     };
+  }
+
+  // Use onGenerateRoute for routes that require arguments
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case chat:
+        final args = settings.arguments as Map<String, dynamic>;
+        if (!args.containsKey('chatId') || !args.containsKey('otherUserId')) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('Error: Missing chat arguments')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            chatId: args['chatId'] as String,
+            otherUserId: args['otherUserId'] as String,
+          ),
+        );
+      case profileView:
+        final user = settings.arguments as UserModel;
+        return MaterialPageRoute(
+          builder: (_) => ProfileViewScreen(user: user),
+        );
+      default:
+        // Return null for routes defined in the 'routes' map
+        return null;
+    }
   }
 }

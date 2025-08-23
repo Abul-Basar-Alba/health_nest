@@ -1,3 +1,5 @@
+// health_nest/android/app/build.gradle.kts
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -14,12 +16,14 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // This is the fix for the desugaring error in Kotlin syntax
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
     defaultConfig {
@@ -44,4 +48,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Change this line
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

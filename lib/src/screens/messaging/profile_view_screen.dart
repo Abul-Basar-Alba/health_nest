@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/chat_provider.dart';
 
 class ProfileViewScreen extends StatelessWidget {
-  const ProfileViewScreen({super.key});
+  final UserModel user;
+  const ProfileViewScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    // This example fetches a dummy user for demonstration
-    // In a real app, you would pass the user ID and fetch data from Firestore
-    final user = UserModel(
-      id: 'dummy_id',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      isPremium: true,
-      profileImageUrl: 'https://via.placeholder.com/150',
-      isProfilePublic: true,
-      height: 175.0,
-      weight: 70.0,
-      bmi: 22.86,
-    );
+    // Access the current user from the UserProvider
+    final currentUserProvider = Provider.of<UserProvider>(context);
+    final currentUserId = currentUserProvider.user?.id;
+
+    if (currentUserId == null) {
+      // Handle the case where the current user is not logged in
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+        ),
+        body: const Center(
+          child: Text('Please log in to view profiles.'),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -36,6 +40,10 @@ class ProfileViewScreen extends StatelessWidget {
               radius: 60,
               backgroundImage: NetworkImage(
                   user.profileImageUrl ?? 'https://via.placeholder.com/150'),
+              onBackgroundImageError: (exception, stackTrace) {
+                // Fallback to a default icon on image load error
+                debugPrint('Error loading image for user: ${user.name}');
+              },
             ),
             const SizedBox(height: 16),
             Text(
@@ -78,10 +86,15 @@ class ProfileViewScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 // Logic to start a new chat with this user
-                // Navigator.pushNamed(context, '/chat', arguments: {'otherUserId': user.id});
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Starting a chat with ${user.name}')),
-                );
+                final chatProvider =
+                    Provider.of<ChatProvider>(context, listen: false);
+                final chatId = chatProvider.getChatId(currentUserId!, user.id);
+
+                // Navigate to the ChatScreen with the required arguments
+                Navigator.pushNamed(context, '/chat', arguments: {
+                  'chatId': chatId,
+                  'otherUserId': user.id,
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,

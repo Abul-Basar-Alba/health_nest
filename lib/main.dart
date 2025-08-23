@@ -5,7 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'src/providers/user_provider.dart';
 import 'src/providers/history_provider.dart';
-import 'src/providers/step_provider.dart'; // Added
+import 'src/providers/step_provider.dart';
+import 'src/providers/chat_provider.dart'; // Added ChatProvider
 import 'src/routes/app_routes.dart';
 
 void main() async {
@@ -17,7 +18,8 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
-        ChangeNotifierProvider(create: (_) => StepProvider()), // Added
+        ChangeNotifierProvider(create: (_) => StepProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()), // Add this line
       ],
       child: const MyApp(),
     ),
@@ -49,12 +51,12 @@ class MyApp extends StatelessWidget {
         ),
         fontFamily: 'Inter',
         cardTheme: CardThemeData(
-          elevation: 4, // Increased elevation for better shadow
+          elevation: 4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16), // Softer corners
+            borderRadius: BorderRadius.circular(16),
           ),
           color: Colors.white,
-          surfaceTintColor: Colors.transparent, // Prevents tinting
+          surfaceTintColor: Colors.transparent,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -109,8 +111,9 @@ class MyApp extends StatelessWidget {
               fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
-      initialRoute: '/login',
+      initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
+      onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }
 }

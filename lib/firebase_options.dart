@@ -29,10 +29,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return linux;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -86,4 +83,13 @@ class DefaultFirebaseOptions {
     measurementId: 'G-QM82WZQZSD',
   );
 
+  static const FirebaseOptions linux = FirebaseOptions(
+    apiKey: 'AIzaSyACU-kMBtoDZ0NHDg3KsI9-u2uq6xZZ0ZM',
+    appId: '1:66898048685:web:4d64f2d873030d3934f824',
+    messagingSenderId: '66898048685',
+    projectId: 'healthnest-ae7bb',
+    authDomain: 'healthnest-ae7bb.firebaseapp.com',
+    storageBucket: 'healthnest-ae7bb.firebasestorage.app',
+    measurementId: 'G-QM82WZQZSD',
+  );
 }

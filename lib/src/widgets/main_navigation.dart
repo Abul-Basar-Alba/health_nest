@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:health_nest/src/providers/user_provider.dart';
-import 'package:health_nest/src/screens/community_screen.dart';
-import 'package:health_nest/src/screens/dashboard_screen.dart';
-import 'package:health_nest/src/screens/documentation_screen.dart';
-import 'package:health_nest/src/screens/paid_services_screen.dart';
-import 'package:health_nest/src/screens/recommendation_screen.dart';
-import 'package:provider/provider.dart';
+// health_nest/lib/src/widgets/main_navigation.dart
 
-// Import all your screen widgets here
+import 'package:flutter/material.dart';
+import 'package:health_nest/src/screens/dashboard_screen.dart';
+import 'package:health_nest/src/screens/community_screen.dart';
+import 'package:health_nest/src/screens/recommendation_screen.dart';
+import 'package:health_nest/src/screens/profile_screen.dart'; // Import Profile Screen
+import 'package:health_nest/src/screens/step_count_screen.dart'; // Import Step Count Screen
+import 'package:health_nest/src/screens/messaging/chat_list_screen.dart'; // Import Messaging Screen
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -19,10 +18,13 @@ class MainNavigation extends StatefulWidget {
 class MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    DashboardScreen(),
-    CommunityScreen(),
-    RecommendationScreen(),
+  final List<Widget> _widgetOptions = <Widget>[
+    const DashboardScreen(),
+    const StepTrackingScreen(), // New: Step Tracking Screen
+    const ChatListScreen(), // New: Messaging Screen
+    const CommunityScreen(),
+    const RecommendationScreen(),
+    const ProfileScreen(), // New: Profile Screen
   ];
 
   void _onItemTapped(int index) {
@@ -33,30 +35,23 @@ class MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final isStandardUser = !(userProvider.user?.isPremium ?? false);
-
-    // Conditionally add screens to the list
-    final List<Widget> navScreens = [..._widgetOptions];
-    if (isStandardUser) {
-      navScreens.add(const PaidServicesScreen());
-    }
-
-    // You can add DocumentationScreen here if it's for everyone, or only for premium.
-    // Based on your last request, it was for standard users.
-    if (isStandardUser) {
-      navScreens.add(const DocumentationScreen());
-    }
-
     return Scaffold(
       body: Center(
-        child: navScreens.elementAt(_selectedIndex),
+        child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_rounded),
             label: 'Dashboard',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.directions_walk_rounded), // New: Step Count icon
+            label: 'Steps',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.message_rounded), // New: Messaging icon
+            label: 'Messages',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.groups_rounded),
@@ -66,23 +61,17 @@ class MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.psychology_alt_rounded),
             label: 'AI Coach',
           ),
-          if (isStandardUser)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.workspace_premium_rounded),
-              label: 'Premium',
-            ),
-          if (isStandardUser)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_rounded),
-              label: 'Docs',
-            ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_rounded), // New: Profile icon
+            label: 'Profile',
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.green[800],
         unselectedItemColor: Colors.grey[600],
         onTap: _onItemTapped,
         backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed, // Ensures all items are visible
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

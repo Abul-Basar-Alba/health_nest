@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
-import '../services/chat_service.dart';
 
 class ChatProvider extends ChangeNotifier {
-  final ChatService _chatService = ChatService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   List<ConversationModel> _conversations = [];
   List<MessageModel> _currentMessages = [];
   String? _currentChatId;
@@ -12,32 +13,68 @@ class ChatProvider extends ChangeNotifier {
   List<ConversationModel> get conversations => _conversations;
   List<MessageModel> get currentMessages => _currentMessages;
 
-  Future<void> fetchConversations(String userId) async {
-    _chatService.getConversations(userId).listen((conversations) {
-      _conversations = conversations;
+  // Use a Stream to listen for real-time changes in conversations
+  void fetchConversations(String userId) {
+    _firestore
+        .collection('chats')
+        .where('participants', arrayContains: userId)
+        .orderBy('lastMessageTimestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _conversations = snapshot.docs
+          .map((doc) => ConversationModel.fromFirestore(doc))
+          .toList();
       notifyListeners();
     });
   }
 
-  Future<void> fetchMessages(String chatId) async {
+  // Use a Stream to listen for real-time changes in messages
+  void fetchMessages(String chatId) {
     _currentChatId = chatId;
-    _chatService.getMessages(chatId).listen((messages) {
-      _currentMessages = messages;
+    _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _currentMessages = snapshot.docs
+          .map((doc) => MessageModel.fromFirestore(doc))
+          .toList()
+          .reversed
+          .toList(); // Reverse to show latest messages at the bottom
       notifyListeners();
     });
   }
 
+  // Method to send a new message
   Future<void> sendMessage(
       String senderId, String receiverId, String content) async {
-    final chatId = await _chatService.createOrGetChat(senderId, receiverId);
-    final message = MessageModel(
-      id: '', // Will be assigned by Firestore
-      senderId: senderId,
-      receiverId: receiverId,
-      content: content,
-      timestamp: DateTime.now(),
-    );
-    await _chatService.sendMessage(chatId, message);
+    final chatId = getChatId(senderId, receiverId);
+    final chatDocRef = _firestore.collection('chats').doc(chatId);
+    final now = DateTime.now();
+
+    final messageData = {
+      'senderId': senderId,
+      'content': content,
+      'timestamp': now,
+    };
+
+    // Add message to the messages sub-collection
+    await chatDocRef.collection('messages').add(messageData);
+
+    // Update or create the main chat document
+    await chatDocRef.set({
+      'participants': [senderId, receiverId],
+      'lastMessage': content,
+      'lastMessageTimestamp': now,
+    }, SetOptions(merge: true));
+  }
+
+  // This method ensures a consistent chatId regardless of who starts the chat
+  String getChatId(String userId1, String userId2) {
+    final sortedIds = [userId1, userId2]..sort();
+    return '${sortedIds[0]}_${sortedIds[1]}';
   }
 
   void clearChatState() {

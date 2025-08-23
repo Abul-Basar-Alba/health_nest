@@ -1,6 +1,8 @@
+// health_nest/lib/src/screens/dashboard_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider.dart'; // Assume this provider holds user data
+import '../providers/user_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -42,12 +44,29 @@ class DashboardScreen extends StatelessWidget {
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
       children: [
+        // New: Exercise button
         _buildDashboardButton(
           context,
-          title: 'Home',
-          icon: Icons.home_rounded,
+          title: 'Exercise',
+          icon: Icons.run_circle_rounded,
+          color: Colors.lightGreen.shade600,
+          onTap: () => Navigator.pushNamed(context, '/exercise'),
+        ),
+        // New: Step Count button
+        _buildDashboardButton(
+          context,
+          title: 'Step Counter',
+          icon: Icons.directions_walk_rounded,
           color: Colors.blue.shade600,
-          onTap: () => Navigator.pushNamed(context, '/home'),
+          onTap: () => Navigator.pushNamed(context, '/step-count'),
+        ),
+        // New: Messaging button
+        _buildDashboardButton(
+          context,
+          title: 'Messaging',
+          icon: Icons.message_rounded,
+          color: Colors.teal.shade600,
+          onTap: () => Navigator.pushNamed(context, '/chat-list'),
         ),
         _buildDashboardButton(
           context,

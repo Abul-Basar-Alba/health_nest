@@ -1,8 +1,9 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.health_nest">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Add your permission here -->
+    <!-- Permissions required for the app -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:label="health_nest"
@@ -19,7 +20,6 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
             
-            <!-- Flutter theme while initializing -->
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
@@ -30,6 +30,16 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- Pedometer Receiver for background step counting -->
+        <receiver
+            android:name="com.pedometer.PedometerReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="pedometer.service.start"/>
+            </intent-filter>
+        </receiver>
 
         <!-- Required by Flutter for plugin registration -->
         <meta-data

@@ -40,11 +40,22 @@ class LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       userProvider.setUser(user);
-      Navigator.pushReplacementNamed(context, '/dashboard');
+
+      // Navigate to the root route, which handles conditional redirection.
+      Navigator.pushReplacementNamed(context, '/');
     } catch (e) {
       if (!mounted) return;
+
+      String cleanErrorMessage = 'An unknown error occurred.';
+      if (e.toString().contains(']')) {
+        // Clean up Firebase error messages to be more user-friendly.
+        cleanErrorMessage = e.toString().split(']')[1].trim();
+      } else {
+        cleanErrorMessage = e.toString();
+      }
+
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = cleanErrorMessage;
         _isLoading = false;
       });
     }
