@@ -77,6 +77,7 @@ class ChatProvider extends ChangeNotifier {
     return '${sortedIds[0]}_${sortedIds[1]}';
   }
 
+  // The logic to clear chat data from memory (but not from Firestore)
   void clearChatState() {
     _conversations = [];
     _currentMessages = [];
