@@ -25,9 +25,26 @@ class AdminContactScreenState extends State<AdminContactScreen> {
     if (_formKey.currentState!.validate()) {
       // Logic to submit the form data
       // For example, send an email or store in a database
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your message has been sent!')),
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Message Sent!'),
+            content: const Text(
+                'Thank you for your message. We will get back to you shortly.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
       );
+
       _nameController.clear();
       _emailController.clear();
       _messageController.clear();
