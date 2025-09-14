@@ -58,7 +58,7 @@ class FirestoreService {
   }
 
   // --- Food Management ---
-  Future<void> saveFoodEntry(String userId, FoodModel food) async {
+  Future<void> saveFoodEntry(String userId, FoodItem food) async {
     await _db
         .collection('users')
         .doc(userId)

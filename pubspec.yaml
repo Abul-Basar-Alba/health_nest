@@ -28,6 +28,9 @@ dependencies:
   http: ^1.1.2
   google_maps_flutter: ^2.5.3
   location: ^8.0.1
+  cached_network_image: ^3.4.1
+  gemini: ^2.1.1
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:

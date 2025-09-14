@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/food_model.dart';
+import '../models/food_model.dart'; // Correctly import the FoodModel class
 
 class FoodCard extends StatelessWidget {
-  final FoodModel food;
+  final FoodItem food; // Change FoodModel to FoodItem to match the class name
   final VoidCallback? onTap;
 
   const FoodCard({
@@ -26,6 +26,7 @@ class FoodCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // You can use CachedNetworkImage here later for real images
               const Icon(
                 Icons.restaurant_menu,
                 color: Colors.green,
@@ -56,8 +57,10 @@ class FoodCard extends StatelessWidget {
                       children: [
                         _buildNutrientTag(
                             'Protein', food.protein.toStringAsFixed(1), 'g'),
-                        _buildNutrientTag('Carbs',
-                            food.carbohydrates.toStringAsFixed(1), 'g'),
+                        _buildNutrientTag(
+                            'Carbs',
+                            food.carbs.toStringAsFixed(1),
+                            'g'), // Fix: changed from carbohydrates to carbs
                         _buildNutrientTag(
                             'Fat', food.fat.toStringAsFixed(1), 'g'),
                       ],

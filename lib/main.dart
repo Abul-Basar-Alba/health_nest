@@ -6,7 +6,9 @@ import 'firebase_options.dart';
 import 'src/providers/user_provider.dart';
 import 'src/providers/history_provider.dart';
 import 'src/providers/step_provider.dart';
-import 'src/providers/chat_provider.dart'; // Added ChatProvider
+import 'src/providers/chat_provider.dart';
+import 'src/providers/nutrition_provider.dart';
+import 'src/providers/recommendation_provider.dart'; // Add this line
 import 'src/routes/app_routes.dart';
 
 void main() async {
@@ -19,7 +21,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
         ChangeNotifierProvider(create: (_) => StepProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()), // Add this line
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => NutritionProvider()),
+        ChangeNotifierProvider(
+            create: (_) => RecommendationProvider()), // Add this line
       ],
       child: const MyApp(),
     ),
@@ -50,10 +55,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
         fontFamily: 'Inter',
-        cardTheme: CardThemeData(
+        cardTheme: const CardThemeData(
           elevation: 4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
           color: Colors.white,
           surfaceTintColor: Colors.transparent,

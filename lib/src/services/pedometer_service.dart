@@ -1,3 +1,5 @@
+// lib/src/services/pedometer_service.dart
+
 import 'dart:async';
 import 'package:pedometer/pedometer.dart';
 

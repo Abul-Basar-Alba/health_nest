@@ -115,13 +115,8 @@ class AdminContactScreenState extends State<AdminContactScreen> {
                 maxLines: 5,
                 decoration: const InputDecoration(
                   labelText: 'Your Message',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Icon(Icons.message_rounded),
-                    ),
-                  ),
+                  // The fix is here: using a simple Icon widget
+                  prefixIcon: Icon(Icons.message_rounded),
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),

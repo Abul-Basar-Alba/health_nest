@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/models/food_model.dart';
-import 'package:health_nest/src/services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../models/food_model.dart';
+import '../providers/nutrition_provider.dart';
+import '../widgets/food_card.dart'; // We'll create this widget to display food items
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
@@ -10,36 +12,16 @@ class NutritionScreen extends StatefulWidget {
 }
 
 class NutritionScreenState extends State<NutritionScreen> {
-  final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
-  List<FoodModel> _searchResults = [];
-  bool _isLoading = false;
 
-  void _searchFood() async {
-    setState(() {
-      _isLoading = true;
+  @override
+  void initState() {
+    super.initState();
+    // Fetch an initial list of popular food items when the screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NutritionProvider>(context, listen: false)
+          .fetchPopularFoods();
     });
-    try {
-      final results = await _apiService.searchFood(_searchController.text);
-      setState(() {
-        _searchResults = results;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _logMeal(FoodModel food) {
-    // In a real app, this would save to Firestore and update the HistoryProvider.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${food.name} logged successfully!')),
-    );
   }
 
   @override
@@ -53,63 +35,68 @@ class NutritionScreenState extends State<NutritionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search for food...',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _searchFood,
-                ),
-              ),
-              onSubmitted: (_) => _searchFood(),
+            Consumer<NutritionProvider>(
+              builder: (context, nutritionProvider, child) {
+                return TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search for food...',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () => nutritionProvider
+                          .searchFoodItems(_searchController.text),
+                    ),
+                  ),
+                  onSubmitted: (query) =>
+                      nutritionProvider.searchFoodItems(query),
+                );
+              },
             ),
             const SizedBox(height: 16),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (_searchResults.isEmpty)
-              const Expanded(
-                child: Center(
-                  child: Text('Search for a food item to get started.'),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    final food = _searchResults[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        title: Text(food.name),
-                        subtitle:
-                            Text('${food.calories.toStringAsFixed(0)} kcal'),
-                        trailing: ElevatedButton(
-                          onPressed: () => _logMeal(food),
-                          child: const Text('Log'),
-                        ),
-                        onTap: () {
-                          // Show detailed breakdown
-                          _showFoodDetails(context, food);
-                        },
+            Consumer<NutritionProvider>(
+              builder: (context, nutritionProvider, child) {
+                if (nutritionProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (nutritionProvider.errorMessage != null) {
+                  return Expanded(
+                    child: Center(
+                      child: Text(
+                        nutritionProvider.errorMessage!,
+                        style: const TextStyle(color: Colors.red),
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
+                  );
+                } else if (nutritionProvider.foodItems.isEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Text('Search for a food item to get started.'),
+                    ),
+                  );
+                } else {
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: nutritionProvider.foodItems.length,
+                      itemBuilder: (context, index) {
+                        final food = nutritionProvider.foodItems[index];
+                        return FoodCard(
+                          food: food,
+                          onTap: () => _showFoodDetails(context, food),
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showFoodDetails(BuildContext context, FoodModel food) {
+  void _showFoodDetails(BuildContext context, FoodItem food) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -139,8 +126,12 @@ class NutritionScreenState extends State<NutritionScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
-                  _logMeal(food);
+                  // This is where you would call a method to save the food to Firestore
                   Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('${food.name} logged successfully!')),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,

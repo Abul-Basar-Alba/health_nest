@@ -2,6 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -49,5 +50,7 @@
     <!-- Motion data permission for step counting -->
     <key>NSMotionUsageDescription</key>
     <string>We need access to motion data to count your steps.</string>
+	<key>NSMotionUsageDescription</key>
+   <string>This app needs access to your motion data to track your steps.</string>
 </dict>
 </plist>

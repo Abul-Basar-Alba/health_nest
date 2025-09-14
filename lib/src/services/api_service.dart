@@ -11,7 +11,7 @@ class ApiService {
   final String _appKey = 'YOUR_APP_KEY';
 
   /// Searches for food items based on a query.
-  Future<List<FoodModel>> searchFood(String query) async {
+  Future<List<FoodItem>> searchFood(String query) async {
     final uri = Uri.parse(
         '$_nutritionApiUrl?ingr=$query&app_id=$_appId&app_key=$_appKey');
     try {
@@ -20,7 +20,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> foods = data['hints'];
-        return foods.map((food) => FoodModel.fromApi(food['food'])).toList();
+  return foods.map((food) => FoodItem.fromJson({'food': food['food']})).toList();
       } else {
         throw Exception('Failed to load food data: ${response.statusCode}');
       }
