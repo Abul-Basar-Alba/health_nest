@@ -20,6 +20,8 @@ import '../screens/paid_services_screen.dart';
 import '../screens/admin_contact_screen.dart';
 import '../screens/calculator_screen.dart';
 import '../screens/recommendation_screen.dart';
+import '../screens/admin_panel_screen.dart'; // New: Import AdminPanelScreen
+import '../screens/progress_tracker_screen.dart'; // New: Import ProgressTrackerScreen
 
 // Messaging Screens
 import '../screens/messaging/chat_list_screen.dart';
@@ -43,6 +45,9 @@ class AppRoutes {
   static const String documentation = '/documentation';
   static const String paidServices = '/paid-services';
   static const String stepCount = '/step-count';
+  static const String adminPanel = '/admin-panel'; // New: Admin panel route
+  static const String progressTracker =
+      '/progress-tracker'; // New: Progress tracker route
 
   // Messaging routes
   static const String chatList = '/chat-list';
@@ -67,6 +72,10 @@ class AppRoutes {
       documentation: (context) => const DocumentationScreen(),
       paidServices: (context) => const PaidServicesScreen(),
       stepCount: (context) => const StepTrackingScreen(),
+      adminPanel: (context) =>
+          const AdminPanelScreen(), // New: Add AdminPanelScreen
+      progressTracker: (context) =>
+          const ProgressTrackerScreen(), // New: Add ProgressTrackerScreen
       chatList: (context) => const ChatListScreen(),
     };
   }

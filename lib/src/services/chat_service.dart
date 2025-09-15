@@ -31,7 +31,8 @@ class ChatService {
   }
 
   /// Send a new message to a conversation.
-  Future<void> sendMessage(String chatId, MessageModel message) async {
+  Future<void> sendMessage(
+      String chatId, MessageModel message, String text) async {
     // Add the message to the sub-collection
     await _db
         .collection('conversations')

@@ -1,5 +1,3 @@
-// lib/src/providers/recommendation_provider.dart
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -28,6 +26,8 @@ class RecommendationProvider with ChangeNotifier {
   String? get nutritionTips => _nutritionTips;
   String? get exerciseTips => _exerciseTips;
   String? get errorMessage => _errorMessage;
+  bool get recommendationsAreEmpty =>
+      _healthSummary == null && _nutritionTips == null && _exerciseTips == null;
 
   RecommendationProvider() {
     _model = GenerativeModel(model: 'gemini-pro', apiKey: _apiKey);
@@ -37,7 +37,8 @@ class RecommendationProvider with ChangeNotifier {
     required UserModel user,
     required List<HistoryModel> history,
   }) async {
-    if (_apiKey.isEmpty || _apiKey == 'YOUR_GEMINI_API_KEY') {
+    if (_apiKey.isEmpty ||
+        _apiKey == 'AIzaSyDXZIvoa3N_5or2y07AYBbC3zKpYueXfR4') {
       _errorMessage = 'Gemini API Key is not set. Please add your API key.';
       notifyListeners();
       return;
@@ -70,7 +71,7 @@ class RecommendationProvider with ChangeNotifier {
 
   String _generatePrompt(UserModel user, List<HistoryModel> history) {
     String historyText = history.map((h) {
-      final date = DateTime.tryParse(h.timestamp)?.toLocal();
+      final date = DateTime.tryParse(h.timestamp as String)?.toLocal();
       final dateStr =
           date != null ? date.toString().split(' ').first : h.timestamp;
       return 'Date: $dateStr, Calories: ${h.calories ?? '-'}, Weight: -, Goal: -, Activity: ${h.steps ?? '-'} steps';
@@ -107,8 +108,13 @@ Exercise: <Your exercise tips here>
 
   void _parseAndSetRecommendations(String text) {
     final parts = text.split('\n');
-    _healthSummary = parts[0].replaceFirst('Summary: ', '').trim();
-    _nutritionTips = parts[1].replaceFirst('Nutrition: ', '').trim();
-    _exerciseTips = parts[2].replaceFirst('Exercise: ', '').trim();
+    if (parts.length >= 3) {
+      _healthSummary = parts[0].replaceFirst('Summary: ', '').trim();
+      _nutritionTips = parts[1].replaceFirst('Nutrition: ', '').trim();
+      _exerciseTips = parts[2].replaceFirst('Exercise: ', '').trim();
+    } else {
+      _errorMessage = "Failed to parse recommendations from API response.";
+    }
+    notifyListeners();
   }
 }

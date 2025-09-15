@@ -1,4 +1,10 @@
+// lib/src/screens/admin_contact_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../services/admin_message_service.dart';
+import 'admin_chat_screen.dart';
 
 class AdminContactScreen extends StatefulWidget {
   const AdminContactScreen({super.key});
@@ -8,48 +14,24 @@ class AdminContactScreen extends StatefulWidget {
 }
 
 class AdminContactScreenState extends State<AdminContactScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Logic to submit the form data
-      // For example, send an email or store in a database
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Message Sent!'),
-            content: const Text(
-                'Thank you for your message. We will get back to you shortly.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-
-      _nameController.clear();
-      _emailController.clear();
-      _messageController.clear();
-    }
-  }
+  // Define a list of common questions and answers
+  final List<Map<String, String>> faq = [
+    {
+      'question': 'How can I reset my password?',
+      'answer':
+          'You can reset your password from the login screen by clicking on "Forgot Password". We will send a password reset link to your registered email address.'
+    },
+    {
+      'question': 'How does the nutrition tracker work?',
+      'answer':
+          'The nutrition tracker uses the Edamam API to provide detailed nutritional information for various food items. You can search for food and add it to your daily log to track your calorie intake.'
+    },
+    {
+      'question': 'How can I upgrade my account to premium?',
+      'answer':
+          'You can upgrade your account to a premium plan by visiting the "Paid Services" section on your dashboard. This will unlock exclusive features like personalized diet plans and one-on-one sessions with our experts.'
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -60,94 +42,91 @@ class AdminContactScreenState extends State<AdminContactScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'We\'re here to help!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Have a question or need assistance? Fill out the form below and we\'ll get back to you.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[700],
-                    ),
-              ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Your Name',
-                  prefixIcon: Icon(Icons.person_rounded),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hello, how can we help?',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Before contacting us, please check if your question is answered below:',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[700],
+                  ),
+            ),
+            const SizedBox(height: 24),
+            // FAQ Section
+            _buildFaqSection(),
+            const SizedBox(height: 32),
+            // The new section to initiate a chat
+            Text(
+              'Still need to talk to a human?',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final userProvider =
+                      Provider.of<UserProvider>(context, listen: false);
+                  final currentUser = userProvider.user;
+
+                  if (currentUser != null) {
+                    const String adminId = 'SZQYWWWw28fza8MiWYep8snmcox1';
+                    // Navigate to the chat screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AdminChatScreen(
+                          recipientId: adminId,
+                          recipientName: 'Admin',
+                        ),
+                      ),
+                    );
                   }
-                  return null;
                 },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Your Email',
-                  prefixIcon: Icon(Icons.email_rounded),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || !value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _messageController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Your Message',
-                  // The fix is here: using a simple Icon widget
-                  prefixIcon: Icon(Icons.message_rounded),
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your message';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _submitForm,
-                  icon: const Icon(Icons.send_rounded),
-                  label: const Text('Send Message'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                icon: const Icon(Icons.support_agent_rounded),
+                label: const Text('Chat with Admin'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFaqSection() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: faq.length,
+      itemBuilder: (context, index) {
+        return ExpansionTile(
+          title: Text(faq[index]['question']!,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          children: <Widget>[
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(faq[index]['answer']!),
+            ),
+          ],
+        );
+      },
     );
   }
 }

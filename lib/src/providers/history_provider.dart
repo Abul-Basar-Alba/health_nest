@@ -1,3 +1,5 @@
+// lib/src/providers/history_provider.dart
+
 import 'package:flutter/material.dart';
 import '../models/history_model.dart';
 import '../services/firestore_service.dart';
@@ -32,9 +34,12 @@ class HistoryProvider extends ChangeNotifier {
     _todaySteps = 0;
 
     for (var entry in _history) {
-      if (entry.date.year == today.year &&
-          entry.date.month == today.month &&
-          entry.date.day == today.day) {
+      // Use the timestamp string to create a DateTime object
+      final entryDate = DateTime.tryParse(entry.timestamp as String);
+      if (entryDate != null &&
+          entryDate.year == today.year &&
+          entryDate.month == today.month &&
+          entryDate.day == today.day) {
         _todayCalories += entry.calories ?? 0;
         _todaySteps += entry.steps ?? 0;
       }

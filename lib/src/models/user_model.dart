@@ -1,3 +1,5 @@
+// lib/src/models/user_model.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -17,6 +19,7 @@ class UserModel {
   final bool isProfilePublic;
   final String? profileImageUrl;
   final double? bmi;
+  final bool isAdmin; // New field to check if the user is an admin
 
   UserModel({
     required this.id,
@@ -29,6 +32,7 @@ class UserModel {
     this.profileImageUrl,
     this.bmi,
     this.isProfilePublic = false,
+    this.isAdmin = false, // Set default value to false
   });
 
   // Factory constructor to create a UserModel from a Firestore map
@@ -44,6 +48,7 @@ class UserModel {
       profileImageUrl: map['profileImageUrl'] as String?,
       bmi: (map['bmi'] as num?)?.toDouble(),
       isProfilePublic: map['isProfilePublic'] as bool? ?? false,
+      isAdmin: map['isAdmin'] as bool? ?? false, // Get the value from the map
     );
   }
 
@@ -59,6 +64,7 @@ class UserModel {
       'profileImageUrl': profileImageUrl,
       'bmi': bmi,
       'isProfilePublic': isProfilePublic,
+      'isAdmin': isAdmin, // Add the new field to the map
     };
   }
 

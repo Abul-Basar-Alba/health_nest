@@ -11,6 +11,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final bool isStandardUser = userProvider.user?.isPremium == false;
+    final bool isAdmin = userProvider.user?.isAdmin ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,14 +30,14 @@ class DashboardScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 20),
-            _buildGrid(context, isStandardUser),
+            _buildGrid(context, isStandardUser, isAdmin),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGrid(BuildContext context, bool isStandardUser) {
+  Widget _buildGrid(BuildContext context, bool isStandardUser, bool isAdmin) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -44,7 +45,7 @@ class DashboardScreen extends StatelessWidget {
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
       children: [
-        // New: Exercise button
+        // Exercise button
         _buildDashboardButton(
           context,
           title: 'Exercise',
@@ -52,7 +53,7 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.lightGreen.shade600,
           onTap: () => Navigator.pushNamed(context, '/exercise'),
         ),
-        // New: Step Count button
+        // Step Count button
         _buildDashboardButton(
           context,
           title: 'Step Counter',
@@ -60,7 +61,7 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.blue.shade600,
           onTap: () => Navigator.pushNamed(context, '/step-count'),
         ),
-        // New: Messaging button
+        // Messaging button
         _buildDashboardButton(
           context,
           title: 'Messaging',
@@ -68,6 +69,15 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.teal.shade600,
           onTap: () => Navigator.pushNamed(context, '/chat-list'),
         ),
+        // History button
+        _buildDashboardButton(
+          context,
+          title: 'History',
+          icon: Icons.history,
+          color: Colors.brown.shade600,
+          onTap: () => Navigator.pushNamed(context, '/history'),
+        ),
+        // Calculator button
         _buildDashboardButton(
           context,
           title: 'Calculator',
@@ -75,6 +85,7 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.purple.shade600,
           onTap: () => Navigator.pushNamed(context, '/calculator'),
         ),
+        // Community button
         _buildDashboardButton(
           context,
           title: 'Community',
@@ -82,6 +93,7 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.pink.shade600,
           onTap: () => Navigator.pushNamed(context, '/community'),
         ),
+        // Nutrition button
         _buildDashboardButton(
           context,
           title: 'Nutrition',
@@ -89,6 +101,7 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.orange.shade600,
           onTap: () => Navigator.pushNamed(context, '/nutrition'),
         ),
+        // Recommendations button
         _buildDashboardButton(
           context,
           title: 'Recommendations',
@@ -96,13 +109,34 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.green.shade600,
           onTap: () => Navigator.pushNamed(context, '/recommendations'),
         ),
+
+        // Progress Tracker button
         _buildDashboardButton(
           context,
-          title: 'Contact Admin',
-          icon: Icons.email_rounded,
-          color: Colors.red.shade600,
-          onTap: () => Navigator.pushNamed(context, '/admin-contact'),
+          title: 'Progress Tracker',
+          icon: Icons.show_chart_rounded,
+          color: Colors.indigo.shade600,
+          onTap: () => Navigator.pushNamed(context, '/progress-tracker'),
         ),
+
+        // Conditional button for Admin/User
+        if (isAdmin)
+          _buildDashboardButton(
+            context,
+            title: 'Admin Panel',
+            icon: Icons.admin_panel_settings_rounded,
+            color: Colors.red.shade600,
+            onTap: () => Navigator.pushNamed(context, '/admin-panel'),
+          ),
+        if (!isAdmin)
+          _buildDashboardButton(
+            context,
+            title: 'Contact Admin',
+            icon: Icons.email_rounded,
+            color: Colors.red.shade600,
+            onTap: () => Navigator.pushNamed(context, '/admin-contact'),
+          ),
+
         if (isStandardUser)
           _buildDashboardButton(
             context,
@@ -137,6 +171,7 @@ class DashboardScreen extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
+            // ignore: deprecated_member_use
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),

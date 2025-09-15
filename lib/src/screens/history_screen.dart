@@ -1,11 +1,15 @@
+// lib/src/screens/history_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/constants/app_colors.dart';
-import 'package:health_nest/src/providers/history_provider.dart';
-import 'package:health_nest/src/providers/user_provider.dart';
-import 'package:health_nest/src/services/ai_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../models/user_model.dart';
+import '../models/history_model.dart'; // Import HistoryModel
+import '../providers/history_provider.dart';
+import '../providers/user_provider.dart';
+import '../services/ai_service.dart';
+import '../constants/app_colors.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -20,25 +24,34 @@ class HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchAiFeedback();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchAiFeedback();
+    });
   }
 
   void _fetchAiFeedback() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final historyProvider =
         Provider.of<HistoryProvider>(context, listen: false);
-    final aiService = AiService();
-    try {
-      final feedback = await aiService.getHealthRecommendation(
-        user: userProvider.user!,
-        recentHistory: historyProvider.history.take(7).toList(),
-      );
+
+    if (userProvider.user != null && historyProvider.history.isNotEmpty) {
+      final aiService = AiService();
+      try {
+        final feedback = await aiService.getHealthRecommendation(
+          user: userProvider.user!,
+          recentHistory: historyProvider.history.take(7).toList(),
+        );
+        setState(() {
+          _aiFeedback = feedback;
+        });
+      } catch (e) {
+        setState(() {
+          _aiFeedback = 'Failed to load AI feedback. $e';
+        });
+      }
+    } else {
       setState(() {
-        _aiFeedback = feedback;
-      });
-    } catch (e) {
-      setState(() {
-        _aiFeedback = 'Failed to load AI feedback. $e';
+        _aiFeedback = 'No user or historical data available.';
       });
     }
   }
@@ -131,7 +144,7 @@ class HistoryScreenState extends State<HistoryScreen> {
               child: LineChart(
                 LineChartData(
                   gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(show: false),
+                  titlesData: const FlTitlesData(show: false),
                   borderData: FlBorderData(show: true),
                   lineBarsData: [
                     LineChartBarData(
@@ -139,7 +152,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                       isCurved: true,
                       barWidth: 3,
                       color: color,
-                      dotData: FlDotData(show: false),
+                      dotData: const FlDotData(show: false),
                     ),
                   ],
                 ),
@@ -152,17 +165,26 @@ class HistoryScreenState extends State<HistoryScreen> {
   }
 
   List<FlSpot> _generateStepData(List<dynamic> history) {
-    // This is a simplified example. A real-world app would need more robust data handling.
     final spots = <FlSpot>[];
     for (int i = 0; i < 7; i++) {
       final date = DateTime.now().subtract(Duration(days: i));
+
+      // Changed to handle null correctly
       final dayHistory = history.firstWhere(
         (h) =>
-            DateFormat('yyyy-MM-dd').format(h.date) ==
-            DateFormat('yyyy-MM-dd').format(date),
-        orElse: () => null,
+            h is HistoryModel &&
+            DateFormat('yyyy-MM-dd')
+                    .format(DateTime.tryParse(h.timestamp) ?? DateTime(0)) ==
+                DateFormat('yyyy-MM-dd').format(date),
+        orElse: () => HistoryModel(
+          id: 'dummy',
+          timestamp: '',
+          steps: 0, // Default to 0 steps
+        ),
       );
-      spots.add(FlSpot(i.toDouble(), dayHistory?.steps.toDouble() ?? 0));
+
+      spots.add(FlSpot(
+          i.toDouble(), (dayHistory as HistoryModel).steps?.toDouble() ?? 0));
     }
     return spots.reversed.toList();
   }
@@ -177,6 +199,10 @@ class HistoryScreenState extends State<HistoryScreen> {
       itemCount: history.length,
       itemBuilder: (context, index) {
         final entry = history[index];
+        final entryDate = DateTime.tryParse(entry.timestamp);
+        if (entryDate == null) {
+          return const SizedBox.shrink();
+        }
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8),
           elevation: 2,
@@ -184,11 +210,11 @@ class HistoryScreenState extends State<HistoryScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ListTile(
             leading: CircleAvatar(
-              child: Text('${entry.date.day}'),
+              child: Text('${entryDate.day}'),
             ),
-            title: Text(DateFormat.yMMMd().format(entry.date)),
+            title: Text(DateFormat.yMMMd().format(entryDate)),
             subtitle: Text(
-                'Steps: ${entry.steps} | Calories: ${entry.calories.toStringAsFixed(0)}'),
+                'Steps: ${entry.steps ?? '-'} | Calories: ${entry.calories ?? '-'}'),
           ),
         );
       },
