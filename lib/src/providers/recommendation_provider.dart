@@ -6,7 +6,7 @@ import '../models/user_model.dart';
 
 class RecommendationProvider with ChangeNotifier {
   // Replace with your actual Gemini API Key
-  final String _apiKey = 'AIzaSyDXZIvoa3N_5or2y07AYBbC3zKpYueXfR4';
+  //final String _apiKey = 'AIzaSyDXZIvoa3N_5or2y07AYBbC3zKpYueXfR4';
 
   late final GenerativeModel _model;
 
@@ -38,7 +38,8 @@ class RecommendationProvider with ChangeNotifier {
     required List<HistoryModel> history,
   }) async {
     if (_apiKey.isEmpty ||
-        _apiKey == 'AIzaSyDXZIvoa3N_5or2y07AYBbC3zKpYueXfR4') {
+        //_apiKey == 'AIzaSyDXZIvoa3N_5or2y07AYBbC3zKpYueXfR4') 
+    {
       _errorMessage = 'Gemini API Key is not set. Please add your API key.';
       notifyListeners();
       return;
