@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../providers/step_provider.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/workout_history_provider.dart';
+import '../providers/selected_exercise_provider.dart';
 import '../models/exercise_model.dart';
 import 'custom_workout_screen.dart'; // <-- Added for navigation
 
@@ -18,13 +19,11 @@ class ExerciseScreen extends StatefulWidget {
 }
 
 class ExerciseScreenState extends State<ExerciseScreen> {
-  // New: selected exercises list for custom workout
-  final List<ExerciseModel> selectedExercises = [];
-
   @override
   Widget build(BuildContext context) {
-    return Consumer2<StepProvider, ExerciseProvider>(
-      builder: (context, stepProvider, exerciseProvider, child) {
+    return Consumer3<StepProvider, ExerciseProvider, SelectedExerciseProvider>(
+      builder: (context, stepProvider, exerciseProvider,
+          selectedExerciseProvider, child) {
         final int steps = stepProvider.steps;
         const int goal = 10000;
         final double progress = steps / goal;
@@ -58,15 +57,13 @@ class ExerciseScreenState extends State<ExerciseScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: GestureDetector(
-                  onTap: selectedExercises.isEmpty
+                  onTap: selectedExerciseProvider.selectedExercises.isEmpty
                       ? null
                       : () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CustomWorkoutScreen(
-                                selectedExercises: List.from(selectedExercises),
-                              ),
+                              builder: (context) => const CustomWorkoutScreen(),
                             ),
                           );
                         },
@@ -79,37 +76,39 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                         height: 48,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: selectedExercises.isEmpty
-                              ? LinearGradient(
-                                  colors: [
-                                    Colors.grey.shade300,
-                                    Colors.grey.shade400
-                                  ],
-                                )
-                              : LinearGradient(
-                                  colors: [
-                                    Colors.blue.shade600,
-                                    Colors.blue.shade400
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          boxShadow: selectedExercises.isEmpty
-                              ? []
-                              : [
-                                  BoxShadow(
-                                    color: Colors.blue.withOpacity(0.4),
-                                    spreadRadius: 2,
-                                    blurRadius: 8,
-                                  )
-                                ],
+                          gradient:
+                              selectedExerciseProvider.selectedExercises.isEmpty
+                                  ? LinearGradient(
+                                      colors: [
+                                        Colors.grey.shade300,
+                                        Colors.grey.shade400
+                                      ],
+                                    )
+                                  : LinearGradient(
+                                      colors: [
+                                        Colors.blue.shade600,
+                                        Colors.blue.shade400
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                          boxShadow:
+                              selectedExerciseProvider.selectedExercises.isEmpty
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.4),
+                                        spreadRadius: 2,
+                                        blurRadius: 8,
+                                      )
+                                    ],
                         ),
                         child: const Icon(
                           Icons.fitness_center_outlined,
                           color: Colors.white,
                         ),
                       ),
-                      if (selectedExercises.isNotEmpty)
+                      if (selectedExerciseProvider.selectedExercises.isNotEmpty)
                         Positioned(
                           top: 2,
                           right: 2,
@@ -120,7 +119,8 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                               color: Colors.red,
                             ),
                             child: Text(
-                              selectedExercises.length.toString(),
+                              selectedExerciseProvider.selectedExercises.length
+                                  .toString(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -247,18 +247,13 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                             itemBuilder: (context, innerIndex) {
                               final exercise = exercises[innerIndex];
                               final isSelected =
-                                  selectedExercises.contains(exercise);
+                                  selectedExerciseProvider.isSelected(exercise);
                               return Padding(
                                 padding: const EdgeInsets.only(right: 16.0),
                                 child: InkWell(
                                   onTap: () {
-                                    setState(() {
-                                      if (isSelected) {
-                                        selectedExercises.remove(exercise);
-                                      } else {
-                                        selectedExercises.add(exercise);
-                                      }
-                                    });
+                                    selectedExerciseProvider
+                                        .toggleExerciseSelection(exercise);
                                   },
                                   child: Stack(
                                     children: [
