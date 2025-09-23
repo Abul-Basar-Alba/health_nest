@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "66898048685",
+    "project_id": "healthnest-ae7bb",
+    "storage_bucket": "healthnest-ae7bb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66898048685:android:97479e97c570f09634f824",
+        "android_client_info": {
+          "package_name": "com.example.health_nest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "66898048685-eq79jg6k6bj3kdavc89a97eane2rqgjc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.health_nest",
+            "certificate_hash": "fa77e3550305edd14a54addb5763165133e44c03"
+          }
+        },
+        {
+          "client_id": "66898048685-peqp26p4ajhodbaeat323pn3bu5nrhu4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS6M0_ZL4EKtwUJ1ieuUfW-zq--sFzkm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "66898048685-peqp26p4ajhodbaeat323pn3bu5nrhu4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "66898048685-07g8r71d8435tb7bnrarc3au3eefnorp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.healthNest"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

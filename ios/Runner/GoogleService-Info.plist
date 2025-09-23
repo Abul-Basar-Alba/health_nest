@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>66898048685-07g8r71d8435tb7bnrarc3au3eefnorp.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.66898048685-07g8r71d8435tb7bnrarc3au3eefnorp</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>66898048685-eq79jg6k6bj3kdavc89a97eane2rqgjc.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDS-AgHA4ljFikOVlGh65m4ZAp0kgA0OBc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>66898048685</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.healthNest</string>
+	<key>PROJECT_ID</key>
+	<string>healthnest-ae7bb</string>
+	<key>STORAGE_BUCKET</key>
+	<string>healthnest-ae7bb.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:66898048685:ios:a4fcc4553cd05c3334f824</string>
+</dict>
+</plist>
