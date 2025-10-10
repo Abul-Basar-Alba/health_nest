@@ -1,3 +1,5 @@
+import 'package:health_nest/src/screens/activity_dashboard_screen_fixed.dart';
+
 import '../screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:health_nest/main.dart';
@@ -15,6 +17,8 @@ import '../screens/onboarding/profile_setup_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/nutrition_screen.dart';
 import '../screens/exercise_screen.dart';
+import '../screens/activity_dashboard_screen.dart'
+    hide ActivityDashboardScreen; // New: Activity Dashboard
 import '../screens/history_screen.dart';
 import '../screens/community/community_screen.dart';
 import '../screens/profile_screen.dart';
@@ -42,6 +46,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String nutrition = '/nutrition';
   static const String exercise = '/exercise';
+  static const String activityDashboard = '/activity-dashboard';
   static const String history = '/history';
   static const String community = '/community';
   static const String calculator = '/calculator';
@@ -72,6 +77,7 @@ class AppRoutes {
       home: (context) => const HomeScreen(),
       nutrition: (context) => const NutritionScreen(),
       exercise: (context) => const ExerciseScreen(),
+      activityDashboard: (context) => const ActivityDashboardScreen(),
       history: (context) => const HistoryScreen(),
       community: (context) => const CommunityScreen(),
       calculator: (context) => const CalculatorScreen(),

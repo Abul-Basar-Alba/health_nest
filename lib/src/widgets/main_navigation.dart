@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/screens/dashboard_screen.dart';
+import 'package:health_nest/src/screens/activity_dashboard_screen.dart'; // New: Activity Dashboard
+import 'package:health_nest/src/screens/exercise_screen.dart'; // New: Exercise Screen
 import 'package:health_nest/src/screens/community_screen.dart';
 import 'package:health_nest/src/screens/recommendation_screen.dart';
 import 'package:health_nest/src/screens/profile_screen.dart'; // Import Profile Screen
-import 'package:health_nest/src/screens/step_count_screen.dart'; // Import Step Count Screen
 import 'package:health_nest/src/screens/messaging/chat_list_screen.dart'; // Import Messaging Screen
 
 class MainNavigation extends StatefulWidget {
@@ -20,7 +21,8 @@ class MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _widgetOptions = <Widget>[
     const DashboardScreen(),
-    const StepTrackingScreen(), // New: Step Tracking Screen
+    const ActivityDashboardScreen(), // New: Activity Dashboard Screen
+    const ExerciseScreen(), // New: Exercise Screen
     const ChatListScreen(), // New: Messaging Screen
     const CommunityScreen(),
     const RecommendationScreen(),
@@ -46,11 +48,15 @@ class MainNavigationState extends State<MainNavigation> {
             label: 'Dashboard',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.directions_walk_rounded), // New: Step Count icon
-            label: 'Steps',
+            icon: Icon(Icons.directions_walk_rounded), // Activity Tracker
+            label: 'Activity',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.message_rounded), // New: Messaging icon
+            icon: Icon(Icons.fitness_center_rounded), // Exercise Library
+            label: 'Exercises',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.message_rounded), // Messaging icon
             label: 'Messages',
           ),
           const BottomNavigationBarItem(
@@ -62,7 +68,7 @@ class MainNavigationState extends State<MainNavigation> {
             label: 'AI Coach',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded), // New: Profile icon
+            icon: Icon(Icons.person_rounded), // Profile icon
             label: 'Profile',
           ),
         ],

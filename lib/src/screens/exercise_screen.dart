@@ -2,11 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../providers/step_provider.dart';
 import '../providers/exercise_provider.dart';
-import '../providers/workout_history_provider.dart';
 import '../providers/selected_exercise_provider.dart';
 import '../models/exercise_model.dart';
 import 'custom_workout_screen.dart'; // <-- Added for navigation
@@ -21,13 +18,8 @@ class ExerciseScreen extends StatefulWidget {
 class ExerciseScreenState extends State<ExerciseScreen> {
   @override
   Widget build(BuildContext context) {
-    return Consumer3<StepProvider, ExerciseProvider, SelectedExerciseProvider>(
-      builder: (context, stepProvider, exerciseProvider,
-          selectedExerciseProvider, child) {
-        final int steps = stepProvider.steps;
-        const int goal = 10000;
-        final double progress = steps / goal;
-
+    return Consumer2<ExerciseProvider, SelectedExerciseProvider>(
+      builder: (context, exerciseProvider, selectedExerciseProvider, child) {
         if (exerciseProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -49,7 +41,7 @@ class ExerciseScreenState extends State<ExerciseScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Activity & Workouts'),
+            title: const Text('Workout Library'),
             centerTitle: false,
             elevation: 0,
             backgroundColor: Colors.transparent,
@@ -140,78 +132,19 @@ class ExerciseScreenState extends State<ExerciseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Activity Tracker Section ---
+                // Welcome Section
                 Text(
-                  'Activity Tracker',
+                  'Exercise Library',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                 ),
-                const SizedBox(height: 30),
-                Center(
-                  child: SizedBox(
-                    width: 250,
-                    height: 250,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(begin: 0.0, end: progress),
-                          duration: const Duration(seconds: 1),
-                          builder: (context, value, child) {
-                            return CircularProgressIndicator(
-                              value: value.clamp(0.0, 1.0),
-                              strokeWidth: 20,
-                              backgroundColor: Colors.blue.shade100,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.blue.shade700,
-                              ),
-                            );
-                          },
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              FontAwesomeIcons.shoePrints,
-                              size: 40,
-                              color: Colors.blue.shade700,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              steps.toString(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displaySmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                            ),
-                            const Text(
-                              'Steps',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                _buildProgressDetailsCard(context, stepProvider),
-
-                // --- Exercise Library Section ---
-                const SizedBox(height: 40),
+                const SizedBox(height: 8),
                 Text(
-                  'Workout Library',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                  'Select exercises to build your custom workout',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[600],
                       ),
                 ),
                 const SizedBox(height: 20),
@@ -353,142 +286,11 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                     );
                   },
                 ),
-
-                // --- Workout History Section ---
-                const SizedBox(height: 40),
-                Text(
-                  'Your Workout History',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                ),
-                const SizedBox(height: 20),
-                Consumer<WorkoutHistoryProvider>(
-                  builder: (context, workoutHistoryProvider, child) {
-                    if (workoutHistoryProvider.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (workoutHistoryProvider.errorMessage.isNotEmpty) {
-                      return Center(
-                          child: Text(workoutHistoryProvider.errorMessage));
-                    }
-                    if (workoutHistoryProvider.workoutHistory.isEmpty) {
-                      return const Center(
-                          child: Text('No workout history found.'));
-                    }
-
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: workoutHistoryProvider.workoutHistory.length,
-                      itemBuilder: (context, index) {
-                        final history =
-                            workoutHistoryProvider.workoutHistory[index];
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            leading: Icon(Icons.fitness_center,
-                                color: Colors.green[600]),
-                            title: Text(
-                              history.exerciseName,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            subtitle: Text(
-                              'Duration: ${history.durationInMinutes.toStringAsFixed(0)} mins\n'
-                              'Calories: ${history.caloriesBurned.toStringAsFixed(0)} kcal',
-                            ),
-                            trailing: Text(
-                              '${history.date.day}/${history.date.month}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildProgressDetailsCard(
-      BuildContext context, StepProvider stepProvider) {
-    const int goal = 10000;
-
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildDetailItem(
-                  context,
-                  title: 'Goal',
-                  value: '$goal',
-                  unit: 'steps',
-                  icon: Icons.flag,
-                  color: Colors.green,
-                ),
-                _buildDetailItem(
-                  context,
-                  title: 'Calories',
-                  value: stepProvider.caloriesBurned.toStringAsFixed(0),
-                  unit: 'kcal',
-                  icon: Icons.local_fire_department,
-                  color: Colors.red,
-                ),
-                _buildDetailItem(
-                  context,
-                  title: 'Distance',
-                  value: stepProvider.distanceKm.toStringAsFixed(2),
-                  unit: 'km',
-                  icon: Icons.map,
-                  color: Colors.orange,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(BuildContext context,
-      {required String title,
-      required String value,
-      required String unit,
-      required IconData icon,
-      required Color color}) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 30),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        Text(
-          unit,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
-        ),
-      ],
     );
   }
 }

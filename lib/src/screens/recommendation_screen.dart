@@ -84,6 +84,8 @@ class RecommendationScreenState extends State<RecommendationScreen> {
         centerTitle: true,
       ),
       body: _buildBody(recProvider),
+      // Prevent the body from resizing when keyboard appears
+      resizeToAvoidBottomInset: true,
     );
   }
 
@@ -129,8 +131,11 @@ class RecommendationScreenState extends State<RecommendationScreen> {
             ),
           ),
         ),
-        // --- New Chatbox Section ---
-        if (recProvider.healthSummary != null) _buildChatbox(recProvider),
+        // --- Mobile Responsive Chatbox Section ---
+        if (recProvider.healthSummary != null)
+          SafeArea(
+            child: _buildChatbox(recProvider),
+          ),
       ],
     );
   }
@@ -240,11 +245,15 @@ class RecommendationScreenState extends State<RecommendationScreen> {
             ),
           ),
           const SizedBox(height: 10),
+          // Mobile responsive input
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _chatController,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _sendChatMessage(),
+                  maxLines: null,
                   decoration: InputDecoration(
                     hintText: 'Ask a health question...',
                     border: OutlineInputBorder(
@@ -253,15 +262,18 @@ class RecommendationScreenState extends State<RecommendationScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 20.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 12.0),
                   ),
-                  onSubmitted: (value) => _sendChatMessage(),
                 ),
               ),
               const SizedBox(width: 8),
               recProvider.isLoading
-                  ? const CircularProgressIndicator()
+                  ? const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(),
+                    )
                   : FloatingActionButton(
                       onPressed: _sendChatMessage,
                       backgroundColor: Colors.green[700],

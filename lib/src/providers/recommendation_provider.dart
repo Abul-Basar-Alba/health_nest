@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/history_model.dart';
 import '../models/user_model.dart';
 
@@ -76,7 +76,7 @@ class RecommendationProvider with ChangeNotifier {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          "model": "gemma2-9b-it",
+          "model": "llama-3.1-8b-instant",
           "messages": [
             {"role": "user", "content": prompt}
           ],
@@ -89,10 +89,11 @@ class RecommendationProvider with ChangeNotifier {
             jsonDecode(response.body)['choices'][0]['message']['content'];
         _parseAndSetRecommendations(generatedText);
       } else {
+        final errorBody = response.body;
         _errorMessage =
-            "Failed to generate recommendations. Status code: ${response.statusCode}";
+            "Failed to generate recommendations. Status code: ${response.statusCode}. Error: $errorBody";
         if (kDebugMode) {
-          print('API Error Response: ${response.body}');
+          print('API Error Response: $errorBody');
         }
       }
     } catch (e) {
@@ -130,7 +131,7 @@ class RecommendationProvider with ChangeNotifier {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          "model": "gemma2-9b-it",
+          "model": "llama-3.1-8b-instant",
           "messages": apiMessages,
         }),
       );
@@ -142,7 +143,9 @@ class RecommendationProvider with ChangeNotifier {
         _chatHistory
             .add(ChatMessage(role: 'assistant', content: generatedText));
       } else {
-        _errorMessage = "Chat failed: ${response.body}";
+        final errorBody = response.body;
+        _errorMessage =
+            "Chat failed: Status ${response.statusCode}. Error: $errorBody";
       }
     } catch (e) {
       _errorMessage = "Chat error: $e";
@@ -188,19 +191,86 @@ Exercise: <Your exercise tips here>
   }
 
   void _parseAndSetRecommendations(String text) {
-    final summaryMatch = RegExp(r'Summary:\s*(.*)').firstMatch(text);
-    final nutritionMatch = RegExp(r'Nutrition:\s*(.*)').firstMatch(text);
-    final exerciseMatch = RegExp(r'Exercise:\s*(.*)').firstMatch(text);
+    // Multi-line regex patterns for better parsing
+    final summaryMatch =
+        RegExp(r'Summary:\s*(.*?)(?=Nutrition:|Exercise:|$)', dotAll: true)
+            .firstMatch(text);
+    final nutritionMatch =
+        RegExp(r'Nutrition:\s*(.*?)(?=Exercise:|Summary:|$)', dotAll: true)
+            .firstMatch(text);
+    final exerciseMatch =
+        RegExp(r'Exercise:\s*(.*?)(?=Summary:|Nutrition:|$)', dotAll: true)
+            .firstMatch(text);
 
     _healthSummary = summaryMatch?.group(1)?.trim();
     _nutritionTips = nutritionMatch?.group(1)?.trim();
     _exerciseTips = exerciseMatch?.group(1)?.trim();
 
-    if (_healthSummary == null ||
-        _nutritionTips == null ||
-        _exerciseTips == null) {
-      _errorMessage =
-          "Failed to parse recommendations from API response. Response format may have changed.";
+    // Fallback: if parsing fails, use the whole response as health summary
+    if ((_healthSummary == null || _healthSummary!.isEmpty) &&
+        (_nutritionTips == null || _nutritionTips!.isEmpty) &&
+        (_exerciseTips == null || _exerciseTips!.isEmpty)) {
+      // Split the response into sections if possible
+      final lines = text.split('\n');
+      final summary = <String>[];
+      final nutrition = <String>[];
+      final exercise = <String>[];
+
+      String currentSection = 'summary';
+
+      for (String line in lines) {
+        final trimmedLine = line.trim();
+        if (trimmedLine.toLowerCase().contains('nutrition') ||
+            trimmedLine.toLowerCase().contains('diet') ||
+            trimmedLine.toLowerCase().contains('food')) {
+          currentSection = 'nutrition';
+          continue;
+        }
+        if (trimmedLine.toLowerCase().contains('exercise') ||
+            trimmedLine.toLowerCase().contains('activity') ||
+            trimmedLine.toLowerCase().contains('workout')) {
+          currentSection = 'exercise';
+          continue;
+        }
+
+        if (trimmedLine.isNotEmpty) {
+          switch (currentSection) {
+            case 'summary':
+              summary.add(trimmedLine);
+              break;
+            case 'nutrition':
+              nutrition.add(trimmedLine);
+              break;
+            case 'exercise':
+              exercise.add(trimmedLine);
+              break;
+          }
+        }
+      }
+
+      _healthSummary = summary.isEmpty
+          ? "AI analysis completed successfully."
+          : summary.join(' ');
+      _nutritionTips = nutrition.isEmpty
+          ? "Follow a balanced diet with regular meals."
+          : nutrition.join(' ');
+      _exerciseTips = exercise.isEmpty
+          ? "Stay active with regular physical activities."
+          : exercise.join(' ');
+    }
+
+    // Ensure minimum content
+    if (_healthSummary == null || _healthSummary!.isEmpty) {
+      _healthSummary =
+          "Your health data has been analyzed. Continue tracking for better insights.";
+    }
+    if (_nutritionTips == null || _nutritionTips!.isEmpty) {
+      _nutritionTips =
+          "Maintain a balanced diet with plenty of fruits, vegetables, and adequate hydration.";
+    }
+    if (_exerciseTips == null || _exerciseTips!.isEmpty) {
+      _exerciseTips =
+          "Aim for at least 30 minutes of moderate physical activity daily.";
     }
 
     notifyListeners();

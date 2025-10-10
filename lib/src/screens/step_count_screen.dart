@@ -148,11 +148,12 @@ class _StepTrackingScreenState extends State<StepTrackingScreen> {
                   color: Colors.blue.shade600,
                 ),
                 const SizedBox(height: 20),
+                // Info Card about Step Counting
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15)),
-                  color: Colors.blue.shade50,
+                  color: Colors.orange.shade50,
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
@@ -160,17 +161,17 @@ class _StepTrackingScreenState extends State<StepTrackingScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.headphones_rounded,
-                                color: Colors.blue[700], size: 30),
+                            Icon(Icons.info_outline,
+                                color: Colors.orange[700], size: 30),
                             const SizedBox(width: 15),
                             Expanded(
                               child: Text(
-                                'Audio-Guided Workouts',
+                                'Mobile Step Counting',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleLarge
                                     ?.copyWith(
-                                      color: Colors.blue[700],
+                                      color: Colors.orange[700],
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -179,31 +180,21 @@ class _StepTrackingScreenState extends State<StepTrackingScreen> {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'Get motivated with personalized audio workout plans based on your activity data. Works offline!',
+                          'Step counting works automatically on mobile devices. Install the mobile app to track real steps with your phone\'s sensors.',
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                         const SizedBox(height: 15),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Starting an audio workout!')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[600],
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.smartphone, color: Colors.orange[600]),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Auto-detects walking & running',
+                              style: TextStyle(
+                                  color: Colors.orange[600],
+                                  fontWeight: FontWeight.w500),
                             ),
-                            child: const Text('Start Workout'),
-                          ),
+                          ],
                         ),
                       ],
                     ),
