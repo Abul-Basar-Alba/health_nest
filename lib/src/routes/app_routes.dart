@@ -1,4 +1,4 @@
-import 'package:health_nest/src/screens/activity_dashboard_screen_fixed.dart';
+import 'package:health_nest/src/screens/activity_dashboard_screen.dart';
 
 import '../screens/splash_screen.dart';
 import 'package:flutter/material.dart';

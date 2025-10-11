@@ -43,33 +43,90 @@ class MainNavigationState extends State<MainNavigation> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Dashboard',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.home_filled, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.directions_walk_rounded), // Activity Tracker
-            label: 'Activity',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Activity',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.local_fire_department_rounded, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center_rounded), // Exercise Library
-            label: 'Exercises',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Exercises',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.fitness_center_rounded, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.message_rounded), // Messaging icon
-            label: 'Messages',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Messages',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.chat_bubble_rounded, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.groups_rounded),
-            label: 'Community',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Community',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.people_rounded, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.psychology_alt_rounded),
-            label: 'AI Coach',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'AI Coach',
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.auto_awesome_rounded, size: 28),
+              ),
+            ),
+            label: '',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded), // Profile icon
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: Tooltip(
+              message: 'Profile',
+              child: Icon(Icons.person_rounded),
+            ),
+            label: '',
           ),
         ],
         currentIndex: _selectedIndex,

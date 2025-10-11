@@ -33,6 +33,7 @@ class RecommendationScreenState extends State<RecommendationScreen> {
     final recProvider =
         Provider.of<RecommendationProvider>(context, listen: false);
 
+    // Only generate recommendations if user has data and history
     if (userProvider.user != null &&
         historyProvider.history.isNotEmpty &&
         recProvider.recommendationsAreEmpty) {
@@ -40,12 +41,16 @@ class RecommendationScreenState extends State<RecommendationScreen> {
         user: userProvider.user!,
         history: historyProvider.history,
       );
-    } else {
-      if (userProvider.user == null || historyProvider.history.isEmpty) {
-        recProvider.setErrorMessage(
-            'No user or historical data available to generate recommendations.');
-      }
     }
+    // Don't show error message for missing data - just show clean chatbot interface
+  }
+
+  bool _hasUserData() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final historyProvider =
+        Provider.of<HistoryProvider>(context, listen: false);
+
+    return userProvider.user != null && historyProvider.history.isNotEmpty;
   }
 
   // New method to handle sending chat messages
@@ -83,60 +88,171 @@ class RecommendationScreenState extends State<RecommendationScreen> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: _buildBody(recProvider),
-      // Prevent the body from resizing when keyboard appears
+      body: SafeArea(
+        child: _buildBody(recProvider),
+      ),
+      // Enable keyboard awareness
       resizeToAvoidBottomInset: true,
     );
   }
 
   Widget _buildBody(RecommendationProvider recProvider) {
+    bool hasData = _hasUserData();
+
     return Column(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Existing recommendation section
-                  if (recProvider.isLoading)
-                    const Center(child: CircularProgressIndicator())
-                  else if (recProvider.errorMessage != null)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          recProvider.errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
+        // Only show recommendations section if user has data
+        if (hasData) ...[
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (recProvider.isLoading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (recProvider.errorMessage != null)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            recProvider.errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
-                    )
-                  else if (recProvider.recommendationsAreEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'No recommendations generated. Please check your data or try again later.',
-                          style: TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  else
-                    _buildRecommendationSection(recProvider),
-                ],
+                      )
+                    else if (!recProvider.recommendationsAreEmpty)
+                      _buildRecommendationSection(recProvider),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        // --- Mobile Responsive Chatbox Section ---
-        if (recProvider.healthSummary != null)
-          SafeArea(
-            child: _buildChatbox(recProvider),
+        ] else ...[
+          // Clean welcome message for new users
+          Expanded(
+            child: _buildWelcomeSection(),
           ),
+        ],
+        // Always show chatbox - it's the main feature
+        _buildChatbox(recProvider),
       ],
+    );
+  }
+
+  Widget _buildWelcomeSection() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade50, Colors.blue.shade50],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green.shade100),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.psychology_rounded,
+                    size: 64,
+                    color: Colors.green.shade600,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'AI Health Coach',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Your personal AI health assistant is ready to help!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.chat_bubble_outline,
+                                color: Colors.green.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Ask me anything about health',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome,
+                                color: Colors.blue.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Get personalized recommendations',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.trending_up,
+                                color: Colors.orange.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Track your progress with insights',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Start chatting below to begin your health journey!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
