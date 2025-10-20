@@ -161,6 +161,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 FloatingActionButton(
+                  heroTag: "chat_send_fab", // Unique heroTag added
                   onPressed: _sendMessage,
                   backgroundColor: Colors.green,
                   child: const Icon(Icons.send),

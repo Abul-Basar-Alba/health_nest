@@ -140,10 +140,10 @@ class DashboardScreen extends StatelessWidget {
         if (isStandardUser)
           _buildDashboardButton(
             context,
-            title: 'Paid Services',
+            title: 'Premium Services',
             icon: Icons.workspace_premium_rounded,
             color: Colors.amber.shade600,
-            onTap: () => Navigator.pushNamed(context, '/paid-services'),
+            onTap: () => Navigator.pushNamed(context, '/premium-services'),
           ),
         if (isStandardUser)
           _buildDashboardButton(

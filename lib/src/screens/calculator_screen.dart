@@ -9,6 +9,8 @@ import '../providers/history_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/history_model.dart';
 import '../routes/app_routes.dart'; // Add this import
+import '../widgets/premium_lock_widget.dart';
+import '../services/freemium_service.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -47,8 +49,88 @@ class CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  void _calculateHealthMetrics() {
+  void _calculateHealthMetrics() async {
     if (_formKey.currentState!.validate()) {
+      // Check freemium usage limits
+      final canUse = await FreemiumService.canUseFeature('calculator_uses');
+
+      if (!canUse['canUse']) {
+        // Show usage limit dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.lock, color: Colors.amber[700]),
+                const SizedBox(width: 8),
+                const Text('Daily Limit Reached'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.calculate, size: 64, color: Colors.orange[600]),
+                const SizedBox(height: 16),
+                Text(
+                  'You\'ve used all ${canUse['limit']} calculator uses for today!',
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Upgrade to Premium for unlimited calculations.',
+                  style: TextStyle(color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Usage summary
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Today\'s Usage:',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                      UsageLimitBadge(
+                        feature: 'calculator',
+                        used: canUse['usage'],
+                        limit: canUse['limit'],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Maybe Later'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/premium-services');
+                },
+                icon: const Icon(Icons.diamond),
+                label: const Text('Upgrade Now'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[600],
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       final age = int.parse(_ageController.text);
       final weight = double.parse(_weightController.text);
       final height = double.parse(_heightController.text);
@@ -69,6 +151,9 @@ class CalculatorScreenState extends State<CalculatorScreen> {
         _vitaminRecs = CalculatorUtils.getVitaminRecommendations(age, _isMale);
         _showResult = true;
       });
+
+      // Increment usage after successful calculation
+      await FreemiumService.incrementUsage('calculator_uses');
 
       _saveCalculationToHistory();
     }
@@ -208,6 +293,87 @@ class CalculatorScreenState extends State<CalculatorScreen> {
                 onPressed: _calculateHealthMetrics,
                 child: const Text('Calculate'),
               ),
+            ),
+
+            // Usage indicator for free users
+            const SizedBox(height: 8),
+            FutureBuilder<Map<String, dynamic>>(
+              future: FreemiumService.canUseFeature('calculator_uses'),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox.shrink();
+
+                final data = snapshot.data!;
+                final isPremium = data['isPremium'] as bool;
+
+                if (isPremium) {
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[100],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.amber[300]!),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const PremiumBadge(showText: false, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Unlimited calculations',
+                          style: TextStyle(
+                            color: Colors.amber[800],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.info_outline,
+                          size: 14, color: Colors.blue[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Daily uses: ${data['usage']}/${data['limit']}',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (data['usage'] >= data['limit'] - 3) ...[
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () =>
+                              Navigator.pushNamed(context, '/premium-services'),
+                          child: Text(
+                            'Upgrade',
+                            style: TextStyle(
+                              color: Colors.green[600],
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
             if (_showResult) ...[
               const SizedBox(height: 32),

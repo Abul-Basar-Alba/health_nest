@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
 import '../models/user_model.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -84,6 +85,13 @@ class UserProvider extends ChangeNotifier {
   void setUser(UserModel user) {
     _user = user;
     notifyListeners();
+  }
+
+  // Refresh current user data
+  Future<void> refreshUser() async {
+    if (_user != null) {
+      await _fetchUserData(_user!.id);
+    }
   }
 
   void clearUser() {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:health_nest/src/constants/app_colors.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
-import 'package:health_nest/src/services/auth_service.dart';
 import 'package:health_nest/src/routes/app_routes.dart';
+import 'package:health_nest/src/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

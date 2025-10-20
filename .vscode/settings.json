@@ -1,0 +1,27 @@
+{
+  "firebase.projects": ["healthnest-ae7bb"],
+  "firebase.useEmulatorSuite": true,
+  "firebase.emulatorAutoStart": false,
+  "firebase.defaultProject": "healthnest-ae7bb",
+  "firebase.deployRulesOnSave": false,
+  "flutter.debugExternalPackageLibraries": true,
+  "flutter.debugSdkLibraries": false,
+  "dart.previewFlutterUiGuides": true,
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "files.associations": {
+    "*.dart": "dart",
+    "firestore.rules": "firebase-rules"
+  },
+  "emmet.includeLanguages": {
+    "dart": "html"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "dart.lineLength": 80,
+  "dart.insertArgumentPlaceholders": false,
+  "firebase.hosting.source": "./build/web"
+}

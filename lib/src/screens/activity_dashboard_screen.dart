@@ -1,7 +1,6 @@
 // lib/src/screens/activity_dashboard_screen.dart
 
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 
 import '../providers/step_provider.dart';
@@ -18,6 +17,21 @@ class ActivityDashboardScreenState extends State<ActivityDashboardScreen>
   late AnimationController _congratsController;
   late Animation<double> _congratsAnimation;
   bool _hasShownCongrats = false;
+
+  // Public methods to be called from wrapper
+  void showResetDialog() {
+    final stepProvider = Provider.of<StepProvider>(context, listen: false);
+    _showResetDialog(stepProvider);
+  }
+
+  void showGoalDialog() {
+    final stepProvider = Provider.of<StepProvider>(context, listen: false);
+    _showGoalDialog(stepProvider);
+  }
+
+  void showPremiumDialog() {
+    _showPremiumDialog();
+  }
 
   @override
   void initState() {
@@ -141,39 +155,6 @@ class ActivityDashboardScreenState extends State<ActivityDashboardScreen>
         });
 
         return Scaffold(
-          appBar: AppBar(
-            title: Row(
-              children: [
-                Icon(Icons.directions_walk, color: Colors.blue.shade700),
-                const SizedBox(width: 8),
-                const Text('Health Nest'),
-              ],
-            ),
-            centerTitle: false,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            actions: [
-              // Reset Button
-              IconButton(
-                onPressed: () => _showResetDialog(stepProvider),
-                icon: Icon(Icons.refresh, color: Colors.red.shade600),
-                tooltip: 'Reset Daily Steps',
-              ),
-              // Goal Setting Button
-              IconButton(
-                onPressed: () => _showGoalDialog(stepProvider),
-                icon: Icon(Icons.flag, color: Colors.green.shade600),
-                tooltip: 'Set Daily Goal',
-              ),
-              // Premium Lock Icon
-              IconButton(
-                onPressed: () => _showPremiumDialog(),
-                icon:
-                    Icon(Icons.workspace_premium, color: Colors.amber.shade700),
-                tooltip: 'Premium Features',
-              ),
-            ],
-          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -474,7 +455,7 @@ class ActivityDashboardScreenState extends State<ActivityDashboardScreen>
                     _buildMetricCard(
                       context,
                       'Calories Burned',
-                      '${(steps * 0.04).toStringAsFixed(0)}',
+                      (steps * 0.04).toStringAsFixed(0),
                       Icons.local_fire_department,
                       Colors.red,
                       subtitle: 'Estimated',
@@ -623,29 +604,97 @@ class ActivityDashboardScreenState extends State<ActivityDashboardScreen>
       elevation: 3,
       color: color.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 30),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w500,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () {
+          if (progress < 0.25) {
+            // Show workout start dialog
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.fitness_center, color: Colors.purple, size: 28),
+                    const SizedBox(width: 10),
+                    const Text('Start Workout?'),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.directions_run,
+                      size: 60,
+                      color: Colors.purple.shade300,
                     ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Ready to begin your fitness journey? Let\'s get moving!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Later',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context, 2); // Go to workout tab
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Start Now'),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 30),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ),
+              if (progress < 0.25)
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: color,
+                  size: 18,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -704,13 +753,8 @@ class ActivityDashboardScreenState extends State<ActivityDashboardScreen>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // TODO: Implement premium purchase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Premium features coming soon!'),
-                    backgroundColor: Colors.amber,
-                  ),
-                );
+                // Navigate to premium services screen
+                Navigator.pushNamed(context, '/premium-services');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber.shade700,

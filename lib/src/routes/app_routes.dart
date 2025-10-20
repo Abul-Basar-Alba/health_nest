@@ -23,9 +23,12 @@ import '../screens/history_screen.dart';
 import '../screens/community/community_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/documentation_screen.dart';
+import '../screens/vscode_firebase_manager.dart';
 import '../screens/paid_services_screen.dart';
+import '../screens/premium_services_screen.dart'; // New: Import PremiumServicesScreen
 import '../screens/admin_contact_screen.dart';
 import '../screens/calculator_screen.dart';
+import '../screens/admin_dashboard_screen.dart'; // New: Admin Dashboard
 import '../screens/recommendation_screen.dart';
 import '../screens/admin_panel_screen.dart'; // New: Import AdminPanelScreen
 import '../screens/progress_tracker_screen.dart'; // New: Import ProgressTrackerScreen
@@ -52,11 +55,16 @@ class AppRoutes {
   static const String calculator = '/calculator';
   static const String recommendations = '/recommendations';
   static const String adminContact = '/admin-contact';
+  static const String vscodeFirebaseManager = '/vscode-firebase-manager';
   static const String profile = '/profile';
   static const String documentation = '/documentation';
   static const String paidServices = '/paid-services';
+  static const String premiumServices =
+      '/premium-services'; // New: Premium services route
   static const String stepCount = '/step-count';
   static const String adminPanel = '/admin-panel'; // New: Admin panel route
+  static const String adminDashboard =
+      '/admin-dashboard'; // New: Admin dashboard route
   static const String progressTracker =
       '/progress-tracker'; // New: Progress tracker route
 
@@ -86,12 +94,17 @@ class AppRoutes {
       profile: (context) => const ProfileScreen(),
       documentation: (context) => const DocumentationScreen(),
       paidServices: (context) => const PaidServicesScreen(),
+      premiumServices: (context) =>
+          const PremiumServicesScreen(), // New: Add PremiumServicesScreen
       stepCount: (context) => const StepTrackingScreen(),
       adminPanel: (context) =>
           const AdminPanelScreen(), // New: Add AdminPanelScreen
+      adminDashboard: (context) =>
+          const AdminDashboardScreen(), // New: Admin Dashboard
       progressTracker: (context) =>
           const ProgressTrackerScreen(), // New: Add ProgressTrackerScreen
       chatList: (context) => const ChatListScreen(),
+      vscodeFirebaseManager: (context) => const VSCodeFirebaseManager(),
     };
   }
 
