@@ -131,7 +131,7 @@ class MyApp extends StatelessWidget {
                 fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
-        initialRoute: AppRoutes.login,
+        initialRoute: AppRoutes.splash,
         routes: AppRoutes.routes,
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),

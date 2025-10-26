@@ -1,11 +1,13 @@
 // lib/src/screens/exercise_screen.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/exercise_model.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/selected_exercise_provider.dart';
-import '../models/exercise_model.dart';
+import '../services/history_service.dart';
 import 'custom_workout_screen.dart'; // <-- Added for navigation
 
 class ExerciseScreen extends StatefulWidget {
@@ -16,6 +18,128 @@ class ExerciseScreen extends StatefulWidget {
 }
 
 class ExerciseScreenState extends State<ExerciseScreen> {
+  final HistoryService _historyService = HistoryService();
+
+  Future<void> _showQuickAddDialog(ExerciseModel exercise) async {
+    int duration = 10; // Default duration in minutes
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(exercise.name ?? 'Exercise'),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'How long did you exercise?',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () {
+                        if (duration > 5) {
+                          setState(() => duration -= 5);
+                        }
+                      },
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$duration min',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () {
+                        setState(() => duration += 5);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Calories: ${((exercise.caloriesPerMinute ?? 0) * duration).toStringAsFixed(0)} kcal',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _saveExerciseDirectly(exercise, duration);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF667eea),
+            ),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveExerciseDirectly(
+      ExerciseModel exercise, int duration) async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final calories = ((exercise.caloriesPerMinute ?? 0) * duration).toInt();
+
+      await _historyService.saveActivityHistory(
+        userId: userId,
+        activityLevel: 'Moderate',
+        exerciseType: exercise.name ?? 'Exercise',
+        durationMinutes: duration,
+        caloriesBurned: calories,
+        notes: 'Quick workout',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${exercise.name} saved successfully! 💪'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<ExerciseProvider, SelectedExerciseProvider>(
@@ -188,6 +312,9 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                                     selectedExerciseProvider
                                         .toggleExerciseSelection(exercise);
                                   },
+                                  onLongPress: () {
+                                    _showQuickAddDialog(exercise);
+                                  },
                                   child: Stack(
                                     children: [
                                       Card(
@@ -196,7 +323,7 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                                           borderRadius:
                                               BorderRadius.circular(16),
                                         ),
-                                        child: Container(
+                                        child: SizedBox(
                                           width: 150,
                                           height: 200, // Fixed total height
                                           child: Column(
@@ -251,12 +378,44 @@ class ExerciseScreenState extends State<ExerciseScreen> {
                                                         overflow: TextOverflow
                                                             .ellipsis,
                                                       ),
-                                                      Text(
-                                                        '${exercise.caloriesPerMinute ?? 'N/A'} kcal/min',
-                                                        style: TextStyle(
-                                                            color: Colors
-                                                                .green[600],
-                                                            fontSize: 11),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              '${exercise.caloriesPerMinute ?? 'N/A'} kcal/min',
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                          .green[
+                                                                      600],
+                                                                  fontSize: 11),
+                                                            ),
+                                                          ),
+                                                          GestureDetector(
+                                                            onTap: () =>
+                                                                _showQuickAddDialog(
+                                                                    exercise),
+                                                            child: Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color:
+                                                                    Colors.blue,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            6),
+                                                              ),
+                                                              child: const Icon(
+                                                                Icons.add,
+                                                                size: 12,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),

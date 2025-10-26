@@ -368,7 +368,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'BMI',
                 Icons.calculate,
                 const Color(0xFF6C5CE7),
-                () => Navigator.pushNamed(context, AppRoutes.calculator),
+                () => Navigator.pushNamed(
+                    context, AppRoutes.premiumBMICalculator),
               ),
               _buildActionCard(
                 'AI Health',
@@ -401,10 +402,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 () => Navigator.pushNamed(context, AppRoutes.premiumServices),
               ),
               _buildActionCard(
-                'Activity',
-                Icons.analytics,
+                'Step Counter',
+                Icons.directions_walk,
                 const Color(0xFF00CED1),
-                () => Navigator.pushNamed(context, AppRoutes.activityDashboard),
+                () => Navigator.pushNamed(context, AppRoutes.stepCounter),
               ),
               _buildActionCard(
                 'History',

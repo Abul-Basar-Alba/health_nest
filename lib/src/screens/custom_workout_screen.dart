@@ -1,11 +1,11 @@
 // lib/src/screens/custom_workout_screen.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/exercise_model.dart';
-import '../providers/workout_history_provider.dart';
+
 import '../providers/selected_exercise_provider.dart';
-import '../models/workout_history_model.dart';
+import '../services/history_service.dart';
 
 class CustomWorkoutScreen extends StatefulWidget {
   const CustomWorkoutScreen({super.key});
@@ -17,6 +17,8 @@ class CustomWorkoutScreen extends StatefulWidget {
 class _CustomWorkoutScreenState extends State<CustomWorkoutScreen> {
   final TextEditingController _workoutNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final HistoryService _historyService = HistoryService();
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -24,7 +26,7 @@ class _CustomWorkoutScreenState extends State<CustomWorkoutScreen> {
     super.dispose();
   }
 
-  void _saveWorkout() {
+  void _saveWorkout() async {
     if (_formKey.currentState!.validate()) {
       final selectedExerciseProvider =
           Provider.of<SelectedExerciseProvider>(context, listen: false);
@@ -38,27 +40,62 @@ class _CustomWorkoutScreenState extends State<CustomWorkoutScreen> {
         return;
       }
 
-      final workoutName = _workoutNameController.text;
-      final workoutProvider =
-          Provider.of<WorkoutHistoryProvider>(context, listen: false);
+      setState(() {
+        _isSaving = true;
+      });
 
-      // আমরা প্রতিটি এক্সারসাইজকে আলাদা এন্ট্রি হিসেবে সেভ করছি
-      for (var exercise in selectedExerciseProvider.selectedExercises) {
-        final newEntry = WorkoutHistoryModel(
-          exerciseName: exercise.name ?? 'Unknown Exercise',
-          caloriesBurned: exercise.caloriesPerMinute ?? 0, // ক্যালরি গণনা
-          durationInMinutes: 10, // উদাহরণ হিসেবে ১০ মিনিট ধরা হলো
-          date: DateTime.now(), exerciseId: '', sets: 0, reps: 0,
+      try {
+        final workoutName = _workoutNameController.text;
+        final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+        // Calculate total duration and calories
+        int totalDuration = selectedExerciseProvider.selectedExercises.length *
+            10; // 10 min per exercise
+        double totalCalories = 0;
+
+        for (var exercise in selectedExerciseProvider.selectedExercises) {
+          totalCalories += (exercise.caloriesPerMinute ?? 0) * 10;
+        }
+
+        // Save workout to Firebase using HistoryService
+        await _historyService.saveActivityHistory(
+          userId: userId,
+          activityLevel: 'Moderate',
+          exerciseType: workoutName,
+          durationMinutes: totalDuration,
+          caloriesBurned: totalCalories.toInt(),
+          notes:
+              'Workout with ${selectedExerciseProvider.selectedExercises.length} exercises: ${selectedExerciseProvider.selectedExercises.map((e) => e.name).join(", ")}',
         );
-        workoutProvider.saveWorkoutHistory(newEntry);
-      }
 
-      // Selection clear করি এবং আগের স্ক্রিনে ফিরে যান
-      selectedExerciseProvider.clearSelection();
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$workoutName" workout saved successfully!')),
-      );
+        // Clear selection and navigate back
+        selectedExerciseProvider.clearSelection();
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('"$workoutName" saved successfully! 💪'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving workout: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
+      }
     }
   }
 
@@ -129,11 +166,28 @@ class _CustomWorkoutScreenState extends State<CustomWorkoutScreen> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _saveWorkout,
+                  onPressed: _isSaving ? null : _saveWorkout,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: const Color(0xFF667eea),
                   ),
-                  child: const Text('Save Workout'),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Save Workout',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),

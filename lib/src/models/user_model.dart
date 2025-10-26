@@ -20,6 +20,9 @@ class UserModel {
   final bool isProfilePublic;
   final String? profileImageUrl;
   final double? bmi;
+  final String? bmiCategory; // New field for BMI category
+  final String? activityLevel; // New field for activity level
+  final int? dailyCalories; // New field for daily calorie recommendation
   final bool isAdmin; // New field to check if the user is an admin
   final List<String> likedPosts; // List of liked post IDs
 
@@ -34,6 +37,9 @@ class UserModel {
     this.isPremium = false,
     this.profileImageUrl,
     this.bmi,
+    this.bmiCategory,
+    this.activityLevel,
+    this.dailyCalories,
     this.isProfilePublic = false,
     this.isAdmin = false, // Set default value to false
     this.likedPosts = const [], // Default to empty list
@@ -52,6 +58,9 @@ class UserModel {
       isPremium: map['isPremium'] as bool? ?? false,
       profileImageUrl: map['profileImageUrl'] as String?,
       bmi: (map['bmi'] as num?)?.toDouble(),
+      bmiCategory: map['bmiCategory'] as String?,
+      activityLevel: map['activityLevel'] as String?,
+      dailyCalories: (map['dailyCalories'] as num?)?.toInt(),
       isProfilePublic: map['isProfilePublic'] as bool? ?? false,
       isAdmin: map['isAdmin'] as bool? ?? false, // Get the value from the map
       likedPosts: (map['likedPosts'] as List<dynamic>?)
@@ -73,6 +82,9 @@ class UserModel {
       'isPremium': isPremium,
       'profileImageUrl': profileImageUrl,
       'bmi': bmi,
+      'bmiCategory': bmiCategory,
+      'activityLevel': activityLevel,
+      'dailyCalories': dailyCalories,
       'isProfilePublic': isProfilePublic,
       'isAdmin': isAdmin, // Add the new field to the map
       'likedPosts': likedPosts,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:health_nest/src/constants/app_colors.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:health_nest/src/routes/app_routes.dart';
-import 'package:health_nest/src/services/auth_service.dart';
+import 'package:health_nest/src/services/enhanced_auth_service.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -107,6 +107,26 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     ListTile(
+                      leading: const Icon(Icons.edit_rounded,
+                          color: AppColors.primary),
+                      title: const Text('Edit Profile'),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/edit-profile');
+                      },
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: const Icon(Icons.lock_reset_rounded,
+                          color: AppColors.primary),
+                      title: const Text('Change Password'),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/change-password');
+                      },
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
                       leading: const Icon(Icons.lock_rounded,
                           color: AppColors.primary),
                       title: const Text('Privacy Settings'),
@@ -132,7 +152,7 @@ class ProfileScreen extends StatelessWidget {
                       title: const Text('Log Out'),
                       onTap: () async {
                         // 1. Sign out from Firebase & Google
-                        await AuthService().signOut();
+                        await EnhancedAuthService().signOut();
 
                         // 2. Clear UserProvider
                         userProvider.clearUser();

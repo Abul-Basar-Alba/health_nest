@@ -1,13 +1,12 @@
 // lib/src/screens/nutrition_screen.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/food_model.dart';
-import '../models/history_model.dart'; // Import the new HistoryModel
 import '../providers/nutrition_provider.dart';
-import '../providers/history_provider.dart'; // Import HistoryProvider
-import '../providers/user_provider.dart'; // Import UserProvider
+import '../services/history_service.dart';
 import '../widgets/food_card.dart';
 
 class NutritionScreen extends StatefulWidget {
@@ -131,15 +130,19 @@ class NutritionScreenState extends State<NutritionScreen> {
               _buildNutrientRow('Carbs', '${food.carbs.toStringAsFixed(1)} g'),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  // NEW CODE: Save the food to history
-                  _saveFoodToHistory(food);
+                onPressed: () async {
+                  // Save the food to new nutrition history service
+                  await _saveFoodToHistory(food);
 
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('${food.name} logged successfully!')),
-                  );
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${food.name} logged successfully! 🎉'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -154,27 +157,68 @@ class NutritionScreenState extends State<NutritionScreen> {
     );
   }
 
-  // NEW METHOD: Save food data to Firestore history
-  void _saveFoodToHistory(FoodItem food) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final historyProvider =
-        Provider.of<HistoryProvider>(context, listen: false);
-
-    if (userProvider.user != null) {
-      final newEntry = HistoryModel(
-        id: '', // Firestore will generate a unique ID
-        timestamp: Timestamp.now(),
-        type: 'nutrition', // Set the type of history
-        data: {
-          'name': food.name,
-          'calories': food.calories,
-          'protein': food.protein,
-          'fat': food.fat,
-          'carbs': food.carbs,
-        },
-      );
-      historyProvider.addHistoryEntry(userProvider.user!.id, newEntry);
+  // Updated method: Save food using new HistoryService
+  Future<void> _saveFoodToHistory(FoodItem food) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    
+    if (userId != null) {
+      final historyService = HistoryService();
+      
+      try {
+        // Show meal type selector
+        String? mealType = await _showMealTypeDialog();
+        
+        if (mealType != null) {
+          await historyService.saveNutritionHistory(
+            userId: userId,
+            mealType: mealType,
+            foodName: food.name,
+            calories: food.calories.toInt(),
+            protein: food.protein,
+            carbs: food.carbs,
+            fats: food.fat,
+            quantity: 1.0,
+            unit: 'serving',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to log meal: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
+  }
+
+  // Add meal type selector dialog
+  Future<String?> _showMealTypeDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Meal Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildMealTypeOption('Breakfast', '🌅'),
+            _buildMealTypeOption('Lunch', '🌞'),
+            _buildMealTypeOption('Dinner', '🌙'),
+            _buildMealTypeOption('Snacks', '🍿'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMealTypeOption(String mealType, String emoji) {
+    return ListTile(
+      leading: Text(emoji, style: const TextStyle(fontSize: 24)),
+      title: Text(mealType),
+      onTap: () => Navigator.pop(context, mealType.toLowerCase()),
+    );
   }
 
   Widget _buildNutrientRow(String label, String value) {

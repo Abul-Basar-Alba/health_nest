@@ -9,7 +9,7 @@ import 'package:health_nest/src/screens/calculator_screen.dart';
 import 'package:health_nest/src/screens/community_screen.dart';
 import 'package:health_nest/src/screens/documentation_screen.dart';
 import 'package:health_nest/src/screens/exercise_screen.dart';
-import 'package:health_nest/src/screens/history_screen.dart';
+import 'package:health_nest/src/screens/history/history_screen.dart';
 import 'package:health_nest/src/screens/home_screen.dart';
 import 'package:health_nest/src/screens/messaging/chat_list_screen.dart';
 import 'package:health_nest/src/screens/profile_screen.dart';
