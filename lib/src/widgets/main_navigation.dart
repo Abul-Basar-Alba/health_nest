@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
-import 'package:health_nest/src/screens/activity_dashboard_wrapper.dart';
 import 'package:health_nest/src/screens/admin_contact_screen.dart';
 import 'package:health_nest/src/screens/admin_dashboard_screen.dart';
 import 'package:health_nest/src/screens/calculator_screen.dart';
@@ -14,6 +13,7 @@ import 'package:health_nest/src/screens/home_screen.dart';
 import 'package:health_nest/src/screens/messaging/chat_list_screen.dart';
 import 'package:health_nest/src/screens/profile_screen.dart';
 import 'package:health_nest/src/screens/recommendation_screen.dart';
+import 'package:health_nest/src/screens/step_counter_dashboard_screen.dart';
 import 'package:health_nest/src/services/admin_service.dart';
 import 'package:provider/provider.dart';
 
@@ -300,7 +300,7 @@ class MainNavigationState extends State<MainNavigation> {
     )
         .then((result) {
       // When returning from activity page, show FAB again
-      if (screen is ActivityDashboardWrapper) {
+      if (screen is StepCounterDashboardScreen) {
         _fabKey.currentState?.showFAB();
 
         // If result is a tab index, switch to that tab
@@ -397,12 +397,12 @@ class MainNavigationState extends State<MainNavigation> {
         _DraggableFAB(
           key: _fabKey,
           onPressed: () {
-            _navigateToScreen(const ActivityDashboardWrapper());
+            _navigateToScreen(const StepCounterDashboardScreen());
           },
           backgroundColor: Colors.green.shade600,
           foregroundColor: Colors.white,
-          tooltip: 'Quick Log Activity',
-          child: const Icon(Icons.add),
+          tooltip: 'Step Counter',
+          child: const Icon(Icons.directions_walk),
         ),
       ],
     );
@@ -459,9 +459,9 @@ class MainNavigationState extends State<MainNavigation> {
             onTap: () => _navigateToScreen(const ChatListScreen()),
           ),
           _buildDrawerItem(
-            icon: Icons.analytics_outlined,
-            title: 'Activity Dashboard',
-            onTap: () => _navigateToScreen(const ActivityDashboardWrapper()),
+            icon: Icons.directions_walk,
+            title: 'Step Counter',
+            onTap: () => _navigateToScreen(const StepCounterDashboardScreen()),
           ),
           _buildDrawerItem(
             icon: Icons.history,

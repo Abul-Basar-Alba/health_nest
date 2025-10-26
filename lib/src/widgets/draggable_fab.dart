@@ -1,7 +1,7 @@
 // lib/src/widgets/draggable_fab.dart
 
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/screens/activity_dashboard_wrapper.dart';
+import 'package:health_nest/src/screens/step_counter_dashboard_screen.dart';
 
 class DraggableFAB extends StatefulWidget {
   final VoidCallback? onPressed;
@@ -307,17 +307,17 @@ class DraggableFABOverlayState extends State<DraggableFABOverlay> {
           DraggableFAB(
             key: _fabKey,
             onPressed: () {
-              // Navigate to Activity Dashboard
+              // Navigate to Step Counter
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const ActivityDashboardWrapper(),
+                  builder: (context) => const StepCounterDashboardScreen(),
                 ),
               );
             },
             backgroundColor: Colors.green.shade600,
             foregroundColor: Colors.white,
-            tooltip: 'Quick Log Activity',
-            child: const Icon(Icons.add),
+            tooltip: 'Step Counter',
+            child: const Icon(Icons.directions_walk),
           ),
         ],
       ),

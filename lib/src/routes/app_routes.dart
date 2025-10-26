@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/models/user_model.dart'; // Import UserModel
 import 'package:health_nest/src/screens/dashboard_screen.dart';
-import 'package:health_nest/src/screens/step_count_screen.dart';
 import 'package:health_nest/src/widgets/main_navigation.dart';
 
-import '../screens/activity_dashboard_screen.dart'; // Activity Dashboard
 import '../screens/admin_contact_screen.dart';
 import '../screens/admin_dashboard_screen.dart'; // New: Admin Dashboard
 import '../screens/admin_panel_screen.dart'; // New: Import AdminPanelScreen
@@ -87,7 +85,8 @@ class AppRoutes {
       home: (context) => const HomeScreen(),
       nutrition: (context) => const NutritionScreen(),
       exercise: (context) => const ExerciseScreen(),
-      activityDashboard: (context) => const ActivityDashboardScreen(),
+      activityDashboard: (context) =>
+          const StepCounterDashboardScreen(), // Activity Dashboard = Step Counter
       stepCounter: (context) => const StepCounterDashboardScreen(),
       history: (context) => const HistoryScreen(),
       community: (context) => const CommunityScreen(),
@@ -102,7 +101,8 @@ class AppRoutes {
       paidServices: (context) => const PaidServicesScreen(),
       premiumServices: (context) =>
           const PremiumServicesScreen(), // New: Add PremiumServicesScreen
-      stepCount: (context) => const StepTrackingScreen(),
+      stepCount: (context) =>
+          const StepCounterDashboardScreen(), // Redirect to new step counter
       adminPanel: (context) =>
           const AdminPanelScreen(), // New: Add AdminPanelScreen
       adminDashboard: (context) =>
