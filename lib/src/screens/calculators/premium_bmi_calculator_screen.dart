@@ -599,44 +599,120 @@ class _PremiumBMICalculatorScreenState extends State<PremiumBMICalculatorScreen>
   }
 
   Widget _buildRecommendationButtons() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                'Recommendations',
-                Icons.lightbulb,
-                const Color(0xFFFFD700).withOpacity(0.9),
-                () {
-                  Navigator.pushNamed(context, '/recommendations');
-                },
+        if (isMobile)
+          // Mobile: Stack buttons vertically
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: _buildActionButton(
+                  'Recommendations',
+                  Icons.lightbulb,
+                  const Color(0xFFFFD700).withOpacity(0.9),
+                  () {
+                    Navigator.pushNamed(context, '/recommendations');
+                  },
+                  isMobile: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: _buildActionButton(
+                  'Nutrition Plan',
+                  Icons.restaurant_menu,
+                  const Color(0xFF00B894).withOpacity(0.9),
+                  () {
+                    Navigator.pushNamed(context, '/nutrition');
+                  },
+                  isMobile: true,
+                ),
+              ),
+            ],
+          )
+        else
+          // Desktop: Keep buttons side by side
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  'Recommendations',
+                  Icons.lightbulb,
+                  const Color(0xFFFFD700).withOpacity(0.9),
+                  () {
+                    Navigator.pushNamed(context, '/recommendations');
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActionButton(
+                  'Nutrition Plan',
+                  Icons.restaurant_menu,
+                  const Color(0xFF00B894).withOpacity(0.9),
+                  () {
+                    Navigator.pushNamed(context, '/nutrition');
+                  },
+                ),
+              ),
+            ],
+          ),
+        const SizedBox(height: 16),
+        // Beautiful back button with gradient
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _isSaved = false;
+                });
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      color: Colors.white.withOpacity(0.9),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Back to actions',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildActionButton(
-                'Nutrition Plan',
-                Icons.restaurant_menu,
-                const Color(0xFF00B894).withOpacity(0.9),
-                () {
-                  Navigator.pushNamed(context, '/nutrition');
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: () {
-            setState(() {
-              _isSaved = false;
-            });
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.white70, size: 18),
-          label: const Text(
-            'Back to actions',
-            style: TextStyle(color: Colors.white70),
           ),
         ),
       ],
@@ -1122,14 +1198,22 @@ class _PremiumBMICalculatorScreenState extends State<PremiumBMICalculatorScreen>
     String label,
     IconData icon,
     Color color,
-    VoidCallback onPressed,
-  ) {
+    VoidCallback onPressed, {
+    bool isMobile = false,
+  }) {
     return Container(
       height: 50,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -1140,14 +1224,19 @@ class _PremiumBMICalculatorScreenState extends State<PremiumBMICalculatorScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 20),
+                Icon(icon, color: Colors.white, size: isMobile ? 22 : 20),
                 const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isMobile ? 15 : 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

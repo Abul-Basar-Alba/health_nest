@@ -8,6 +8,7 @@ import '../../models/activity_history_model.dart';
 import '../../models/bmi_history_model.dart';
 import '../../models/nutrition_history_model.dart';
 import '../../services/history_service.dart';
+import 'history_analytics_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -75,61 +76,417 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   Widget _buildAppBar() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
+      padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
+      child: Column(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'My History',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My History',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isMobile ? 20 : 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (_selectedDate != null && !isMobile)
+                      Text(
+                        '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (!isMobile) ...[
+                IconButton(
+                  icon: const Icon(Icons.calendar_today, color: Colors.white),
+                  onPressed: () => _showDatePicker(),
                 ),
                 if (_selectedDate != null)
-                  Text(
-                    '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 12,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.white70),
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = null;
+                      });
+                    },
                   ),
+                IconButton(
+                  icon: const Icon(Icons.analytics, color: Colors.white),
+                  onPressed: () => _showAnalyticsScreen(),
+                ),
               ],
+              if (isMobile)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'all':
+                        setState(() {
+                          _selectedDate = null;
+                        });
+                        break;
+                      case 'today':
+                        _selectToday();
+                        break;
+                      case 'week':
+                        _selectThisWeek();
+                        break;
+                      case 'month':
+                        _selectThisMonth();
+                        break;
+                      case 'custom':
+                        _showDatePicker();
+                        break;
+                      case 'analytics':
+                        _showAnalyticsScreen();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'all',
+                      child: Row(
+                        children: [
+                          Icon(Icons.all_inclusive, size: 20),
+                          SizedBox(width: 12),
+                          Text('All History'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'today',
+                      child: Row(
+                        children: [
+                          Icon(Icons.today, size: 20),
+                          SizedBox(width: 12),
+                          Text('Today'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'week',
+                      child: Row(
+                        children: [
+                          Icon(Icons.date_range, size: 20),
+                          SizedBox(width: 12),
+                          Text('This Week'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'month',
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_month, size: 20),
+                          SizedBox(width: 12),
+                          Text('This Month'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'custom',
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 20),
+                          SizedBox(width: 12),
+                          Text('Custom Date'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'analytics',
+                      child: Row(
+                        children: [
+                          Icon(Icons.analytics, size: 20),
+                          SizedBox(width: 12),
+                          Text('Analytics'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          if (isMobile) ...[
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip(
+                    'All',
+                    Icons.all_inclusive,
+                    isSelected: _selectedDate == null,
+                    onTap: () {
+                      setState(() {
+                        _selectedDate = null;
+                      });
+                    },
+                  ),
+                  _buildFilterChip(
+                    'Today',
+                    Icons.today,
+                    isSelected: _isToday(_selectedDate),
+                    onTap: _selectToday,
+                  ),
+                  _buildFilterChip(
+                    'This Week',
+                    Icons.date_range,
+                    isSelected: false,
+                    onTap: _selectThisWeek,
+                  ),
+                  _buildFilterChip(
+                    'This Month',
+                    Icons.calendar_month,
+                    isSelected: false,
+                    onTap: _selectThisMonth,
+                  ),
+                  _buildFilterChip(
+                    'Custom',
+                    Icons.calendar_today,
+                    isSelected: _selectedDate != null && !_isToday(_selectedDate),
+                    onTap: _showDatePicker,
+                  ),
+                  _buildAnalyticsChip(),
+                ],
+              ),
             ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
-            onPressed: () => _showDatePicker(),
-          ),
-          if (_selectedDate != null)
-            IconButton(
-              icon: const Icon(Icons.clear, color: Colors.white70),
-              onPressed: () {
-                setState(() {
-                  _selectedDate = null;
-                });
-              },
-            ),
-          IconButton(
-            icon: const Icon(Icons.analytics, color: Colors.white),
-            onPressed: () {
-              // TODO: Show analytics
-            },
-          ),
+            if (_selectedDate != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDate = null;
+                        });
+                      },
+                      child: Icon(
+                        Icons.clear,
+                        size: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildFilterChip(
+    String label,
+    IconData icon, {
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Colors.white
+                : Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.3),
+              width: 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? const Color(0xFF667eea)
+                    : Colors.white,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF667eea)
+                      : Colors.white,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsChip() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: _showAnalyticsScreen,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF667eea).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.analytics,
+                size: 16,
+                color: Colors.white,
+              ),
+              SizedBox(width: 6),
+              Text(
+                'Analytics',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _selectToday() {
+    setState(() {
+      _selectedDate = DateTime.now();
+    });
+  }
+
+  void _selectThisWeek() {
+    final now = DateTime.now();
+    setState(() {
+      _selectedDate = now.subtract(Duration(days: now.weekday - 1));
+    });
+  }
+
+  void _selectThisMonth() {
+    final now = DateTime.now();
+    setState(() {
+      _selectedDate = DateTime(now.year, now.month, 1);
+    });
+  }
+
+  bool _isToday(DateTime? date) {
+    if (date == null) return false;
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
+  void _showAnalyticsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HistoryAnalyticsScreen(
+          userId: _userId,
+          selectedTab: _tabController.index,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDatePicker() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF667eea),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
   }
 
   Widget _buildTabBar() {
@@ -853,32 +1210,5 @@ class _HistoryScreenState extends State<HistoryScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _showDatePicker() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF667eea),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 }

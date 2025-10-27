@@ -70,17 +70,25 @@ class HistoryService {
     DateTime endDate,
   ) async {
     try {
+      // Fetch all BMI history for the user (no date filter in query)
       final snapshot = await _firestore
           .collection(_bmiCollection)
           .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-          .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs
+      // Filter by date range on client side
+      final filtered = snapshot.docs
           .map((doc) => BMIHistoryModel.fromMap(doc.data(), doc.id))
-          .toList();
+          .where((record) {
+        return record.date
+                .isAfter(startDate.subtract(const Duration(days: 1))) &&
+            record.date.isBefore(endDate.add(const Duration(days: 1)));
+      }).toList();
+
+      // Sort by date descending
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+
+      return filtered;
     } catch (e) {
       throw Exception('Failed to get BMI history: $e');
     }
@@ -134,17 +142,25 @@ class HistoryService {
     DateTime endDate,
   ) async {
     try {
+      // Fetch all activity history for the user (no date filter in query)
       final snapshot = await _firestore
           .collection(_activityCollection)
           .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-          .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs
+      // Filter by date range on client side
+      final filtered = snapshot.docs
           .map((doc) => ActivityHistoryModel.fromMap(doc.data(), doc.id))
-          .toList();
+          .where((record) {
+        return record.date
+                .isAfter(startDate.subtract(const Duration(days: 1))) &&
+            record.date.isBefore(endDate.add(const Duration(days: 1)));
+      }).toList();
+
+      // Sort by date descending
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+
+      return filtered;
     } catch (e) {
       throw Exception('Failed to get activity history: $e');
     }
@@ -196,6 +212,36 @@ class HistoryService {
           .map((doc) => NutritionHistoryModel.fromMap(doc.data(), doc.id))
           .toList();
     });
+  }
+
+  Future<List<NutritionHistoryModel>> getNutritionHistoryByDateRange(
+    String userId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      // Fetch all nutrition history for the user (no date filter in query)
+      final snapshot = await _firestore
+          .collection(_nutritionCollection)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      // Filter by date range on client side
+      final filtered = snapshot.docs
+          .map((doc) => NutritionHistoryModel.fromMap(doc.data(), doc.id))
+          .where((record) {
+        return record.date
+                .isAfter(startDate.subtract(const Duration(days: 1))) &&
+            record.date.isBefore(endDate.add(const Duration(days: 1)));
+      }).toList();
+
+      // Sort by date
+      filtered.sort((a, b) => a.date.compareTo(b.date));
+
+      return filtered;
+    } catch (e) {
+      throw Exception('Failed to get nutrition history by date range: $e');
+    }
   }
 
   Future<List<NutritionHistoryModel>> getTodaysFoodLog(String userId) async {
