@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
+import 'package:health_nest/src/providers/notification_provider.dart';
 import 'package:health_nest/src/screens/admin_contact_screen.dart';
 import 'package:health_nest/src/screens/admin_dashboard_screen.dart';
 import 'package:health_nest/src/screens/calculator_screen.dart';
@@ -14,6 +15,7 @@ import 'package:health_nest/src/screens/messaging/chat_list_screen.dart';
 import 'package:health_nest/src/screens/profile_screen.dart';
 import 'package:health_nest/src/screens/recommendation_screen.dart';
 import 'package:health_nest/src/screens/step_counter_dashboard_screen.dart';
+import 'package:health_nest/src/screens/notification_screen.dart';
 import 'package:health_nest/src/services/admin_service.dart';
 import 'package:provider/provider.dart';
 
@@ -285,6 +287,21 @@ class MainNavigationState extends State<MainNavigation> {
     const ProfileScreen(), // 👤 Profile
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Initialize notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final notificationProvider =
+          Provider.of<NotificationProvider>(context, listen: false);
+      
+      if (userProvider.user?.id != null) {
+        notificationProvider.initialize(userProvider.user!.id);
+      }
+    });
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -371,10 +388,58 @@ class MainNavigationState extends State<MainNavigation> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // Handle notifications
+          // Notification icon with badge
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              final unreadCount = notificationProvider.unreadCount;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.5),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Center(
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
         ],

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/admin_message_model.dart';
 import '../providers/user_provider.dart';
 import '../services/admin_message_service.dart';
@@ -11,10 +12,10 @@ class AdminChatScreen extends StatefulWidget {
   final String recipientName;
 
   const AdminChatScreen({
-    Key? key,
+    super.key,
     required this.recipientId,
     required this.recipientName,
-  }) : super(key: key);
+  });
 
   @override
   _AdminChatScreenState createState() => _AdminChatScreenState();

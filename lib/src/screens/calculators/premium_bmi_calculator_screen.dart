@@ -1125,13 +1125,16 @@ class _PremiumBMICalculatorScreenState extends State<PremiumBMICalculatorScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 14,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: const TextStyle(

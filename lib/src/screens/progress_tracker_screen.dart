@@ -1,11 +1,12 @@
 // lib/src/screens/progress_tracker_screen.dart
 
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../providers/step_provider.dart';
+import 'package:provider/provider.dart';
+
 import '../providers/history_provider.dart';
+import '../providers/step_provider.dart';
 
 class ProgressTrackerScreen extends StatefulWidget {
   const ProgressTrackerScreen({super.key});
@@ -286,7 +287,7 @@ class _ProgressTrackerScreenState extends State<ProgressTrackerScreen> {
                   Icon(trendIcon, size: 12, color: trendColor),
                   const SizedBox(width: 2),
                   Text(
-                    '${trend.abs().toStringAsFixed(0)}',
+                    trend.abs().toStringAsFixed(0),
                     style: TextStyle(
                       color: trendColor,
                       fontSize: 10,

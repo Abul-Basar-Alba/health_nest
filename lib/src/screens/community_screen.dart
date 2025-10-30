@@ -7,7 +7,6 @@ import 'package:health_nest/src/models/post_model.dart';
 import 'package:health_nest/src/providers/community_provider.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});

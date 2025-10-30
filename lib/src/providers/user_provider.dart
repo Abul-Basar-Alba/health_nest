@@ -59,10 +59,12 @@ class UserProvider extends ChangeNotifier {
     if (height != null) updateData['height'] = height;
     if (weight != null) updateData['weight'] = weight;
     if (bmi != null) updateData['bmi'] = bmi;
-    if (profileImageUrl != null)
+    if (profileImageUrl != null) {
       updateData['profileImageUrl'] = profileImageUrl;
-    if (isProfilePublic != null)
+    }
+    if (isProfilePublic != null) {
       updateData['isProfilePublic'] = isProfilePublic;
+    }
     if (updateData.isNotEmpty) {
       await _firestore.collection('users').doc(_user!.id).update(updateData);
       await _fetchUserData(_user!.id);

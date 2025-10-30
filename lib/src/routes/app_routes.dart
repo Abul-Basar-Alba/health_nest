@@ -32,6 +32,8 @@ import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/progress_tracker_screen.dart'; // New: Import ProgressTrackerScreen
 import '../screens/recommendation_screen.dart';
+import '../screens/settings/account_settings_screen.dart'; // Settings Screens
+import '../screens/settings/privacy_settings_screen.dart'; // Settings Screens
 import '../screens/step_counter_dashboard_screen.dart'; // Step Counter (New)
 import '../screens/vscode_firebase_manager.dart';
 
@@ -58,10 +60,13 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String editProfile = '/edit-profile';
   static const String changePassword = '/change-password';
+  static const String privacySettings = '/privacy-settings'; // New
+  static const String accountSettings = '/account-settings'; // New
   static const String documentation = '/documentation';
   static const String paidServices = '/paid-services';
   static const String premiumServices =
       '/premium-services'; // New: Premium services route
+  static const String premium = '/premium'; // Premium/Subscription screen
   static const String stepCount = '/step-count';
   static const String adminPanel = '/admin-panel'; // New: Admin panel route
   static const String adminDashboard =
@@ -97,10 +102,14 @@ class AppRoutes {
       profile: (context) => const ProfileScreen(),
       editProfile: (context) => const EditProfileScreen(),
       changePassword: (context) => const ChangePasswordScreen(),
+      privacySettings: (context) => const PrivacySettingsScreen(), // New
+      accountSettings: (context) => const AccountSettingsScreen(), // New
       documentation: (context) => const DocumentationScreen(),
       paidServices: (context) => const PaidServicesScreen(),
       premiumServices: (context) =>
           const PremiumServicesScreen(), // New: Add PremiumServicesScreen
+      premium: (context) =>
+          const PremiumServicesScreen(), // Premium route for subscription management
       stepCount: (context) =>
           const StepCounterDashboardScreen(), // Redirect to new step counter
       adminPanel: (context) =>

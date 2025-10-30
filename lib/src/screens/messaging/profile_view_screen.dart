@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../models/user_model.dart';
-import '../../providers/user_provider.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/user_provider.dart';
 
 class ProfileViewScreen extends StatelessWidget {
   final UserModel user;
@@ -88,7 +89,7 @@ class ProfileViewScreen extends StatelessWidget {
                 // Logic to start a new chat with this user
                 final chatProvider =
                     Provider.of<ChatProvider>(context, listen: false);
-                final chatId = chatProvider.getChatId(currentUserId!, user.id);
+                final chatId = chatProvider.getChatId(currentUserId, user.id);
 
                 // Navigate to the ChatScreen with the required arguments
                 Navigator.pushNamed(context, '/chat', arguments: {

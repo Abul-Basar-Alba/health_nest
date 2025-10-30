@@ -1,8 +1,9 @@
 // lib/src/providers/custom_workout_provider.dart
 
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
 import '../models/custom_workout_model.dart';
 
 class CustomWorkoutProvider with ChangeNotifier {
@@ -46,7 +47,7 @@ class CustomWorkoutProvider with ChangeNotifier {
       _customWorkouts = querySnapshot.docs
           .map((doc) => CustomWorkoutModel.fromJson({
                 'id': doc.id,
-                ...doc.data() as Map<String, dynamic>,
+                ...doc.data(),
               }))
           .toList();
 

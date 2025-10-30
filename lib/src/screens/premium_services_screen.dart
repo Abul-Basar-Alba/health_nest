@@ -138,28 +138,40 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
           expandedHeight: 120,
           floating: false,
           pinned: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          flexibleSpace: FlexibleSpaceBar(
-            centerTitle: true,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.diamond,
-                  color: Colors.amber[700],
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Premium Services',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+          elevation: 2,
+          backgroundColor: Colors.white,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Colors.amber[50]!,
+                ],
+              ),
+            ),
+            child: FlexibleSpaceBar(
+              centerTitle: true,
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.diamond,
+                    color: Colors.amber[700],
+                    size: 24,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Premium Services',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           leading: IconButton(
@@ -307,7 +319,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                 padding: const EdgeInsets.all(24),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green[600], size: 32),
+                    Icon(Icons.check_circle,
+                        color: Colors.green[600], size: 32),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -359,10 +372,14 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildUsageRow('🧮 Calculator', usage['calculator'] ?? 0, 20, Colors.orange),
-                  _buildUsageRow('🤖 AI Chat', usage['chat'] ?? 0, 500, Colors.purple),
-                  _buildUsageRow('🥗 Nutrition', usage['nutrition'] ?? 0, 10, Colors.green),
-                  _buildUsageRow('👥 Community', usage['community'] ?? 0, 3, Colors.blue),
+                  _buildUsageRow('🧮 Calculator', usage['calculator'] ?? 0, 20,
+                      Colors.orange),
+                  _buildUsageRow(
+                      '🤖 AI Chat', usage['chat'] ?? 0, 500, Colors.purple),
+                  _buildUsageRow('🥗 Nutrition', usage['nutrition'] ?? 0, 10,
+                      Colors.green),
+                  _buildUsageRow(
+                      '👥 Community', usage['community'] ?? 0, 3, Colors.blue),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -476,7 +493,9 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: selectedPlanIndex == 0 ? Colors.white : Colors.transparent,
+                        color: selectedPlanIndex == 0
+                            ? Colors.white
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: selectedPlanIndex == 0
                             ? [
@@ -492,7 +511,9 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: selectedPlanIndex == 0 ? Colors.black87 : Colors.grey[600],
+                          color: selectedPlanIndex == 0
+                              ? Colors.black87
+                              : Colors.grey[600],
                         ),
                       ),
                     ),
@@ -504,7 +525,9 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: selectedPlanIndex == 1 ? Colors.white : Colors.transparent,
+                        color: selectedPlanIndex == 1
+                            ? Colors.white
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: selectedPlanIndex == 1
                             ? [
@@ -522,13 +545,16 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                             'Yearly',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: selectedPlanIndex == 1 ? Colors.black87 : Colors.grey[600],
+                              color: selectedPlanIndex == 1
+                                  ? Colors.black87
+                                  : Colors.grey[600],
                             ),
                           ),
                           if (selectedPlanIndex == 1) ...[
                             const SizedBox(width: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.green,
                                 borderRadius: BorderRadius.circular(10),
@@ -604,7 +630,6 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                 ),
               ),
             ),
-          
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -621,7 +646,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(12),
@@ -676,7 +702,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                          Icon(Icons.check_circle,
+                              color: Colors.green[600], size: 20),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -727,7 +754,10 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                   child: OutlinedButton(
                     onPressed: () => _startPayment(plan),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: plan['popular'] ? Colors.amber[600]! : Colors.blue[600]!),
+                      side: BorderSide(
+                          color: plan['popular']
+                              ? Colors.amber[600]!
+                              : Colors.blue[600]!),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -980,14 +1010,14 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
 
   Future<Map<String, dynamic>> _buildUsageData() async {
     final isPremium = await FreemiumService.isPremiumUser();
-    
+
     final usage = {
       'calculator': await FreemiumService.getDailyUsage('calculator_uses'),
       'chat': await FreemiumService.getDailyUsage('ai_chat_messages'),
       'nutrition': await FreemiumService.getDailyUsage('nutrition_logs'),
       'community': await FreemiumService.getDailyUsage('community_posts'),
     };
-    
+
     return {
       'isPremium': isPremium,
       'usage': usage,
@@ -997,7 +1027,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
   // Free Trial Method - No payment required
   void _startFreeTrial(Map<String, dynamic> plan) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    
+
     if (userProvider.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1020,10 +1050,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
               const Text('Free Trial Already Used'),
             ],
           ),
-          content: const Text(
-            'আপনি আগেই ৭ দিনের ফ্রি ট্রায়াল ব্যবহার করেছেন। '
-            'এখন প্রিমিয়াম সাবস্ক্রিপশনের জন্য পেমেন্ট করতে হবে।'
-          ),
+          content: const Text('আপনি আগেই ৭ দিনের ফ্রি ট্রায়াল ব্যবহার করেছেন। '
+              'এখন প্রিমিয়াম সাবস্ক্রিপশনের জন্য পেমেন্ট করতে হবে।'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1061,9 +1089,9 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
     try {
       // Activate free trial
       await FreemiumService.startFreeTrial();
-      
+
       Navigator.pop(context); // Close loading dialog
-      
+
       // Show success message
       showDialog(
         context: context,
@@ -1111,7 +1139,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
       );
     } catch (e) {
       Navigator.pop(context); // Close loading dialog
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('ত্রুটি হয়েছে: $e'),
@@ -1124,7 +1152,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
   // Premium Payment Method - SSLCommerz integration
   void _startPayment(Map<String, dynamic> plan) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    
+
     if (userProvider.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1159,8 +1187,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              ...PaymentService.getPaymentMethods().map((method) => 
-                Card(
+              ...PaymentService.getPaymentMethods().map(
+                (method) => Card(
                   child: ListTile(
                     leading: Text(
                       method['icon'],
@@ -1190,7 +1218,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
   }
 
   // Process payment with selected method
-  void _processPayment(Map<String, dynamic> plan, Map<String, dynamic> paymentMethod) async {
+  void _processPayment(
+      Map<String, dynamic> plan, Map<String, dynamic> paymentMethod) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = userProvider.user!;
 
@@ -1255,7 +1284,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                   const SizedBox(height: 12),
                   const Text('📱 Demo Payment করতে:'),
                   const SizedBox(height: 8),
-                  
+
                   // bKash Demo Info
                   if (paymentMethod['name'] == 'bKash') ...[
                     Container(
@@ -1268,7 +1297,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('💰 bKash Demo:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('💰 bKash Demo:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           Text('• Mobile: 01700000000'),
                           Text('• PIN: 1234'),
                           Text('• OTP: 123456'),
@@ -1277,8 +1307,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       ),
                     ),
                   ],
-                  
-                  // Nagad Demo Info  
+
+                  // Nagad Demo Info
                   if (paymentMethod['name'] == 'Nagad') ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -1290,7 +1320,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('💸 Nagad Demo:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('💸 Nagad Demo:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           Text('• Mobile: 01600000000'),
                           Text('• PIN: 1234'),
                           Text('• OTP: 123456'),
@@ -1299,7 +1330,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       ),
                     ),
                   ],
-                  
+
                   // Card Demo Info
                   if (paymentMethod['name'].contains('Card')) ...[
                     Container(
@@ -1312,7 +1343,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('💳 Demo Card:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('💳 Demo Card:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           Text('• Card: 4242424242424242'),
                           Text('• CVV: 123'),
                           Text('• Expiry: 12/25'),
@@ -1321,7 +1353,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                       ),
                     ),
                   ],
-                  
+
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -1339,7 +1371,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         Text('ID: ${paymentResult['tran_id']}'),
                         Text('Amount: ৳${paymentResult['amount']}'),
                         Text('Method: ${paymentMethod['name']}'),
-                        Text('Store: ${paymentResult['demo_info']['store_id']}'),
+                        Text(
+                            'Store: ${paymentResult['demo_info']['store_id']}'),
                       ],
                     ),
                   ),
@@ -1382,7 +1415,7 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
       }
     } catch (e) {
       Navigator.pop(context); // Close loading dialog
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Payment error: $e'),
@@ -1393,7 +1426,8 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
   }
 
   // Simulate successful payment (for demo purposes)
-  void _simulatePaymentSuccess(Map<String, dynamic> plan, Map<String, dynamic> paymentResult) {
+  void _simulatePaymentSuccess(
+      Map<String, dynamic> plan, Map<String, dynamic> paymentResult) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

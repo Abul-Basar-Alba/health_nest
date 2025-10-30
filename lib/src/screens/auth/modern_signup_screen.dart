@@ -1,8 +1,9 @@
 // lib/src/screens/auth/modern_signup_screen.dart
 
-import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+
 import '../../config/auth_colors.dart';
 import '../../services/enhanced_auth_service.dart';
 import 'email_verification_screen.dart';
@@ -84,8 +85,9 @@ class _ModernSignupScreenState extends State<ModernSignupScreen>
     if (password.contains(RegExp(r'[a-z]'))) strength += 0.25;
 
     // Number or special character check
-    if (password.contains(RegExp(r'[0-9!@#$%^&*(),.?":{}|<>]')))
+    if (password.contains(RegExp(r'[0-9!@#$%^&*(),.?":{}|<>]'))) {
       strength += 0.25;
+    }
 
     // Determine strength text and color
     if (strength <= 0.25) {

@@ -324,11 +324,11 @@ class _HistoryScreenState extends State<HistoryScreen>
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 6),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
                 ? Colors.white
@@ -355,12 +355,12 @@ class _HistoryScreenState extends State<HistoryScreen>
             children: [
               Icon(
                 icon,
-                size: 16,
+                size: 14,
                 color: isSelected
                     ? const Color(0xFF667eea)
                     : Colors.white,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Text(
                 label,
                 style: TextStyle(
@@ -368,7 +368,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                       ? const Color(0xFF667eea)
                       : Colors.white,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -380,11 +380,11 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   Widget _buildAnalyticsChip() {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 6),
       child: GestureDetector(
         onTap: _showAnalyticsScreen,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF667eea), Color(0xFF764ba2)],
@@ -403,16 +403,16 @@ class _HistoryScreenState extends State<HistoryScreen>
             children: [
               Icon(
                 Icons.analytics,
-                size: 16,
+                size: 14,
                 color: Colors.white,
               ),
-              SizedBox(width: 6),
+              SizedBox(width: 4),
               Text(
                 'Analytics',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -490,8 +490,14 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   Widget _buildTabBar() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: isMobile ? 8 : 16,
+        vertical: 8,
+      ),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -535,54 +541,68 @@ class _HistoryScreenState extends State<HistoryScreen>
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: const Color(0xFF667eea),
         unselectedLabelColor: Colors.white.withOpacity(0.9),
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 13,
+          fontSize: isMobile ? 11 : 13,
           letterSpacing: 0.5,
         ),
-        unselectedLabelStyle: const TextStyle(
+        unselectedLabelStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 12,
+          fontSize: isMobile ? 10 : 12,
         ),
         dividerColor: Colors.transparent,
-        tabs: const [
+        isScrollable: isMobile, // Enable scrolling on mobile
+        tabAlignment: isMobile ? TabAlignment.start : TabAlignment.fill,
+        tabs: [
           Tab(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.dashboard_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('All'),
+                Icon(Icons.dashboard_rounded, size: isMobile ? 12 : 16),
+                SizedBox(width: isMobile ? 2 : 4),
+                Flexible(
+                  child: Text('All', overflow: TextOverflow.ellipsis),
+                ),
               ],
             ),
           ),
           Tab(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.monitor_weight_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('BMI'),
+                Icon(Icons.monitor_weight_rounded, size: isMobile ? 12 : 16),
+                SizedBox(width: isMobile ? 2 : 4),
+                Flexible(
+                  child: Text('BMI', overflow: TextOverflow.ellipsis),
+                ),
               ],
             ),
           ),
           Tab(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.fitness_center_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('Activity'),
+                Icon(Icons.fitness_center_rounded, size: isMobile ? 12 : 16),
+                SizedBox(width: isMobile ? 2 : 4),
+                Flexible(
+                  child: Text('Activity', overflow: TextOverflow.ellipsis),
+                ),
               ],
             ),
           ),
           Tab(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.restaurant_menu_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('Nutrition'),
+                Icon(Icons.restaurant_menu_rounded, size: isMobile ? 12 : 16),
+                SizedBox(width: isMobile ? 2 : 4),
+                Flexible(
+                  child: Text('Nutrition', overflow: TextOverflow.ellipsis),
+                ),
               ],
             ),
           ),

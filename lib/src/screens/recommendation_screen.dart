@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/history_provider.dart';
 import '../providers/recommendation_provider.dart';
 import '../providers/user_provider.dart';
-import '../providers/history_provider.dart';
 
 class RecommendationScreen extends StatefulWidget {
   const RecommendationScreen({super.key});
@@ -83,15 +84,32 @@ class RecommendationScreenState extends State<RecommendationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Health Coach'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade400, Colors.teal.shade400],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.psychology_rounded,
+                  color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 8),
+            const Text('AI Coach',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          ],
+        ),
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: _buildBody(recProvider),
-      ),
-      // Enable keyboard awareness
+      body: _buildBody(recProvider),
+      // Enable keyboard awareness - critical for chat
       resizeToAvoidBottomInset: true,
     );
   }
@@ -101,343 +119,389 @@ class RecommendationScreenState extends State<RecommendationScreen> {
 
     return Column(
       children: [
-        // Only show recommendations section if user has data
-        if (hasData) ...[
-          Expanded(
-            flex: 1,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (recProvider.isLoading)
-                    const Center(child: CircularProgressIndicator())
-                  else if (recProvider.errorMessage != null)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          recProvider.errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  else if (!recProvider.recommendationsAreEmpty)
-                    _buildRecommendationSection(recProvider),
-                ],
+        // Compact recommendations banner if user has data
+        if (hasData && !recProvider.recommendationsAreEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade50, Colors.teal.shade50],
               ),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome_rounded,
+                    color: Colors.green.shade600, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Personalized recommendations available',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green.shade800,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Show recommendations in dialog or new screen
+                    _showRecommendationsDialog(recProvider);
+                  },
+                  child: Text('View', style: TextStyle(fontSize: 13)),
+                ),
+              ],
             ),
           ),
-        ] else ...[
-          // Clean welcome message for new users
-          Expanded(
-            flex: 1,
-            child: _buildWelcomeSection(),
-          ),
         ],
-        // Always show chatbox - it's the main feature
+        // Main chat interface - takes remaining space
         _buildChatbox(recProvider),
       ],
     );
   }
 
-  Widget _buildWelcomeSection() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green.shade50, Colors.blue.shade50],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.shade100),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.psychology_rounded,
-                    size: 48,
-                    color: Colors.green.shade600,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'AI Health Coach',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Your personal AI health assistant is ready to help!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
+  void _showRecommendationsDialog(RecommendationProvider recProvider) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildFeatureItem(
-                          Icons.chat_bubble_outline,
-                          'Ask me anything about health',
-                          Colors.green.shade600,
-                        ),
-                        const SizedBox(height: 6),
-                        _buildFeatureItem(
-                          Icons.auto_awesome,
-                          'Get personalized recommendations',
-                          Colors.blue.shade600,
-                        ),
-                        const SizedBox(height: 6),
-                        _buildFeatureItem(
-                          Icons.trending_up,
-                          'Track your progress with insights',
-                          Colors.orange.shade600,
-                        ),
-                      ],
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(IconData icon, String text, Color color) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Your Health Insights',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800],
+                      ),
+                ),
+                const SizedBox(height: 20),
+                if (recProvider.healthSummary != null)
+                  _buildRecommendationCard(
+                    context,
+                    title: 'Health Summary',
+                    content: recProvider.healthSummary!,
+                    icon: Icons.analytics_rounded,
+                    color: Colors.lightGreen,
+                  ),
+                const SizedBox(height: 16),
+                if (recProvider.nutritionTips != null)
+                  _buildRecommendationCard(
+                    context,
+                    title: 'Nutrition Tips',
+                    content: recProvider.nutritionTips!,
+                    icon: Icons.restaurant_menu_rounded,
+                    color: Colors.orange,
+                  ),
+                const SizedBox(height: 16),
+                if (recProvider.exerciseTips != null)
+                  _buildRecommendationCard(
+                    context,
+                    title: 'Exercise Tips',
+                    content: recProvider.exerciseTips!,
+                    icon: Icons.directions_run_rounded,
+                    color: Colors.blue,
+                  ),
+              ],
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildRecommendationSection(RecommendationProvider recProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Personalized Recommendations',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.green[800],
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 16),
-        _buildRecommendationCard(
-          context,
-          title: 'Your Health Summary',
-          content: recProvider.healthSummary!,
-          icon: Icons.analytics_rounded,
-          color: Colors.lightGreen,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Actionable Tips',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.green[800],
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 16),
-        _buildRecommendationCard(
-          context,
-          title: 'Nutrition Tips',
-          content: recProvider.nutritionTips!,
-          icon: Icons.restaurant_menu_rounded,
-          color: Colors.orange,
-        ),
-        const SizedBox(height: 16),
-        _buildRecommendationCard(
-          context,
-          title: 'Exercise & Activity',
-          content: recProvider.exerciseTips!,
-          icon: Icons.directions_run_rounded,
-          color: Colors.blue,
-        ),
-        const SizedBox(height: 20),
-      ],
+      ),
     );
   }
 
   Widget _buildChatbox(RecommendationProvider recProvider) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height *
-            0.5, // Max 50% of screen height
-      ),
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        border: Border(top: BorderSide(color: Colors.grey[300]!, width: 1.0)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Chat with your AI Health Coach',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
-          ),
-          const SizedBox(height: 8),
-          Flexible(
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: 120,
-                maxHeight: 180,
-              ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drag handle indicator
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 4),
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
+            ),
+            // Chat messages list
+            Expanded(
               child: recProvider.chatHistory.isEmpty
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'You are an AI health coach. Answer questions in a helpful and friendly tone.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.green.shade50,
+                                  Colors.teal.shade50
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 48,
+                              color: Colors.green.shade600,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Start a conversation',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              'Ask me about nutrition, exercise, sleep, or any health topic!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   : ListView.builder(
                       controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       itemCount: recProvider.chatHistory.length,
-                      padding: const EdgeInsets.all(8.0),
                       itemBuilder: (context, index) {
                         final message = recProvider.chatHistory[index];
                         final isUser = message.role == 'user';
-                        return Align(
-                          alignment: isUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.of(context).size.width * 0.75,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
-                            margin: const EdgeInsets.symmetric(vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isUser
-                                  ? Colors.lightBlue[100]
-                                  : Colors.green[50],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              message.content,
-                              style: TextStyle(
-                                color:
-                                    isUser ? Colors.black87 : Colors.green[900],
-                                fontSize: 13,
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: isUser
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            children: [
+                              if (!isUser) ...[
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green.shade400,
+                                        Colors.teal.shade400
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.psychology_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isUser
+                                        ? Colors.green.shade500
+                                        : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft:
+                                          Radius.circular(isUser ? 16 : 4),
+                                      bottomRight:
+                                          Radius.circular(isUser ? 4 : 16),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    message.content,
+                                    style: TextStyle(
+                                      color: isUser
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontSize: 14,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (isUser) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.person_rounded,
+                                    color: Colors.grey.shade700,
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         );
                       },
                     ),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Compact input row
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 100),
-                  child: TextField(
-                    controller: _chatController,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendChatMessage(),
-                    maxLines: null,
-                    style: const TextStyle(fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: 'Ask a health question...',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 13,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 10.0),
-                      isDense: true,
-                    ),
-                  ),
+            // Input area with better keyboard handling
+            Container(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                    ? 12
+                    : MediaQuery.of(context).padding.bottom + 12,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200, width: 1),
                 ),
               ),
-              const SizedBox(width: 8),
-              recProvider.isLoading
-                  ? const SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Container(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Container(
+                      constraints: const BoxConstraints(maxHeight: 120),
                       decoration: BoxDecoration(
-                        color: Colors.green[700],
-                        shape: BoxShape.circle,
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      child: IconButton(
-                        onPressed: _sendChatMessage,
-                        icon: const Icon(
-                          Icons.send,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
+                      child: TextField(
+                        controller: _chatController,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _sendChatMessage(),
+                        maxLines: null,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Message AI Coach...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          isDense: true,
                         ),
                       ),
                     ),
-            ],
-          ),
-        ],
+                  ),
+                  const SizedBox(width: 8),
+                  recProvider.isLoading
+                      ? Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.green),
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.green.shade500,
+                                Colors.teal.shade500
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.shade300.withOpacity(0.5),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            onPressed: _sendChatMessage,
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

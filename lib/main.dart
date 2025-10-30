@@ -15,6 +15,7 @@ import 'src/providers/recommendation_provider.dart';
 import 'src/providers/community_provider.dart';
 import 'src/providers/exercise_provider.dart'; // এই লাইনটি যোগ করা হয়েছে
 import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
+import 'src/providers/notification_provider.dart'; // Notification provider
 import 'src/routes/app_routes.dart';
 import 'src/providers/workout_history_provider.dart';
 
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) =>
                 WorkoutHistoryProvider()), // এই লাইনটি যোগ করা হয়েছে
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'HealthNest',
