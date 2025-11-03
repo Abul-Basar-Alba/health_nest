@@ -1,21 +1,21 @@
 // health_nest/lib/src/widgets/main_navigation.dart
 
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:health_nest/src/providers/notification_provider.dart';
+import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:health_nest/src/screens/admin_contact_screen.dart';
 import 'package:health_nest/src/screens/admin_dashboard_screen.dart';
 import 'package:health_nest/src/screens/calculator_screen.dart';
-import 'package:health_nest/src/screens/community_screen.dart';
+import 'package:health_nest/src/screens/community/premium_community_screen.dart';
 import 'package:health_nest/src/screens/documentation_screen.dart';
 import 'package:health_nest/src/screens/exercise_screen.dart';
 import 'package:health_nest/src/screens/history/history_screen.dart';
 import 'package:health_nest/src/screens/home_screen.dart';
 import 'package:health_nest/src/screens/messaging/chat_list_screen.dart';
+import 'package:health_nest/src/screens/notification_screen.dart';
 import 'package:health_nest/src/screens/profile_screen.dart';
 import 'package:health_nest/src/screens/recommendation_screen.dart';
 import 'package:health_nest/src/screens/step_counter_dashboard_screen.dart';
-import 'package:health_nest/src/screens/notification_screen.dart';
 import 'package:health_nest/src/services/admin_service.dart';
 import 'package:provider/provider.dart';
 
@@ -283,7 +283,7 @@ class MainNavigationState extends State<MainNavigation> {
     const HomeScreen(), // 🏠 Home - Modern animated home screen
     const RecommendationScreen(), // 🧠 AI Coach
     const ExerciseScreen(), // 🏋️ Workouts
-    const CommunityScreen(), // 👥 Community
+    const PremiumCommunityScreen(), // 👥 Community - Premium Version
     const ProfileScreen(), // 👤 Profile
   ];
 
@@ -295,7 +295,7 @@ class MainNavigationState extends State<MainNavigation> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final notificationProvider =
           Provider.of<NotificationProvider>(context, listen: false);
-      
+
       if (userProvider.user?.id != null) {
         notificationProvider.initialize(userProvider.user!.id);
       }

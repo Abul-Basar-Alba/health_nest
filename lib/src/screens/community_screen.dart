@@ -1,11 +1,11 @@
-// lib/src/screens/community/community_screen.dart
+// lib/src/screens/community_screen.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:health_nest/src/constants/app_colors.dart';
 import 'package:health_nest/src/models/comment_model.dart';
 import 'package:health_nest/src/models/post_model.dart';
-import 'package:health_nest/src/providers/community_provider.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
+import 'package:health_nest/src/services/community_service.dart';
 import 'package:provider/provider.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -16,295 +16,574 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class CommunityScreenState extends State<CommunityScreen> {
-  final TextEditingController _postController = TextEditingController();
+  final CommunityService _communityService = CommunityService();
   final Map<String, bool> _commentSectionVisibility = {};
+  final Map<String, TextEditingController> _commentControllers = {};
 
   @override
-  void initState() {
-    super.initState();
-    // CommunityProvider stream handled in constructor
+  void dispose() {
+    for (var controller in _commentControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
-  void _createPost() {
-    if (_postController.text.isEmpty) return;
+  void _showCreatePostDialog(dynamic currentUser) {
+    if (currentUser == null) return;
 
-    final communityProvider =
-        Provider.of<CommunityProvider>(context, listen: false);
-    communityProvider.addPost(_postController.text, context);
+    final TextEditingController postController = TextEditingController();
 
-    _postController.clear();
-    FocusScope.of(context).unfocus(); // Hide keyboard after posting
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: currentUser.profileImageUrl != null
+                          ? NetworkImage(currentUser.profileImageUrl!)
+                          : null,
+                      backgroundColor: Colors.teal[100],
+                      child: currentUser.profileImageUrl == null
+                          ? const Icon(Icons.person, color: Colors.teal)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        currentUser.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: postController,
+                  autofocus: true,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    hintText: "What's on your mind?",
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (postController.text.trim().isEmpty) return;
+
+                      final newPost = PostModel(
+                        id: '',
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        userAvatar: currentUser.profileImageUrl ?? '',
+                        content: postController.text.trim(),
+                        reactions: {},
+                        comments: 0,
+                        timestamp: Timestamp.now(),
+                      );
+
+                      await _communityService.addPost(newPost);
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Post shared!'),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: Colors.teal,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Post',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final communityProvider = Provider.of<CommunityProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final currentUser = userProvider.user;
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Community'),
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        toolbarHeight: 0,
       ),
       body: Column(
         children: [
-          _buildPostInputCard(userProvider),
-          const Divider(height: 1, color: Colors.grey),
-          Expanded(
-            child: communityProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : communityProvider.posts.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No posts yet! Be the first to share.',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: communityProvider.posts.length,
-                        itemBuilder: (context, index) {
-                          final post = communityProvider.posts[index];
-                          return _buildPostCard(
-                              post, userProvider, communityProvider);
-                        },
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => _showCreatePostDialog(currentUser),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: currentUser?.profileImageUrl != null
+                        ? NetworkImage(currentUser!.profileImageUrl!)
+                        : null,
+                    backgroundColor: Colors.teal[100],
+                    child: currentUser?.profileImageUrl == null
+                        ? const Icon(Icons.person, color: Colors.teal, size: 20)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Text(
+                        "What's on your mind, ${currentUser?.name.split(' ').first ?? 'User'}?",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 15,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: StreamBuilder<List<PostModel>>(
+              stream: _communityService.getPostsStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.teal),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.forum_outlined,
+                            size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No posts yet',
+                          style:
+                              TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Be the first to share something!',
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final post = snapshot.data![index];
+                    return _buildPostCard(post, currentUser);
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPostInputCard(UserProvider userProvider) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              child: Icon(Icons.person, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _postController,
-                decoration: const InputDecoration(
-                  hintText: 'Share your progress or ask a question...',
-                  border: InputBorder.none,
-                ),
-                minLines: 1,
-                maxLines: 5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: _createPost,
-              icon: const Icon(Icons.send_rounded, color: AppColors.community),
-              tooltip: 'Post',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPostCard(PostModel post, UserProvider userProvider,
-      CommunityProvider communityProvider) {
-    final bool isLiked =
-        userProvider.user?.likedPosts.contains(post.id) ?? false;
-    final bool isCommentSectionVisible =
-        _commentSectionVisibility[post.id] ?? false;
-    final commentController = TextEditingController();
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _buildPostCard(PostModel post, dynamic currentUser) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               children: [
                 CircleAvatar(
-                  radius: 20,
-                  child: Text(
-                    post.userName.isNotEmpty ? post.userName[0] : 'U',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  backgroundImage: post.userAvatar.isNotEmpty
+                      ? NetworkImage(post.userAvatar)
+                      : null,
+                  backgroundColor: Colors.teal[100],
+                  child: post.userAvatar.isEmpty
+                      ? const Icon(Icons.person, color: Colors.teal)
+                      : null,
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.userName,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    Text(
-                      '${post.timestamp.toDate().hour}:${post.timestamp.toDate().minute}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(post.content, style: const TextStyle(fontSize: 15)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    final user = userProvider.user;
-                    if (user != null) {
-                      // Updated toggleLike call with userProvider
-                      communityProvider.toggleLike(
-                          post.id, user.id, userProvider);
-                    }
-                  },
-                  icon: Icon(
-                    isLiked ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
-                    size: 20,
-                    color: isLiked ? Colors.blue : Colors.grey,
-                  ),
-                ),
-                Text('${post.likes} likes'),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _commentSectionVisibility[post.id] =
-                          !isCommentSectionVisible;
-                    });
-                  },
-                  child: Text(
-                    isCommentSectionVisible
-                        ? 'Hide Comments'
-                        : 'View all ${post.comments} comments',
-                    style: TextStyle(color: AppColors.community),
-                  ),
-                ),
-              ],
-            ),
-            if (isCommentSectionVisible)
-              Padding(
-                padding: const EdgeInsets.only(top: 10.0),
-                child: _buildCommentSection(
-                    post.id, communityProvider, commentController),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCommentSection(
-      String postId,
-      CommunityProvider communityProvider,
-      TextEditingController commentController) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        StreamBuilder<List<CommentModel>>(
-          stream: communityProvider.getCommentsForPost(postId),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Text('No comments yet.',
-                  style: TextStyle(color: Colors.grey));
-            }
-            final comments = snapshot.data!;
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: comments.length,
-              itemBuilder: (context, index) {
-                final comment = comments[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 12,
-                        child: Text(
-                          comment.userName.isNotEmpty
-                              ? comment.userName[0]
-                              : 'U',
-                          style: const TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.bold),
+                      Text(
+                        post.userName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              comment.userName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                            Text(comment.content,
-                                style: const TextStyle(fontSize: 14)),
-                          ],
+                      Text(
+                        _getTimeAgo(post.timestamp.toDate()),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
-                );
-              },
-            );
-          },
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: commentController,
-                decoration: InputDecoration(
-                  hintText: 'Add a comment...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) {
-                    communityProvider.addComment(postId, value, context);
-                    commentController.clear();
-                  }
-                },
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              post.content,
+              style: const TextStyle(fontSize: 15),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (post.totalReactions > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text(
+                '${post.totalReactions} reactions',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
             ),
-            IconButton(
-              onPressed: () {
-                if (commentController.text.isNotEmpty) {
-                  communityProvider.addComment(
-                      postId, commentController.text, context);
-                  commentController.clear();
-                }
-              },
-              icon: const Icon(Icons.send),
-              color: AppColors.community,
+          const Divider(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: currentUser != null
+                        ? () {
+                            _communityService.toggleLike(
+                                post.id, currentUser.id);
+                          }
+                        : null,
+                    icon: Icon(
+                      Icons.thumb_up,
+                      size: 20,
+                      color: currentUser?.likedPosts.contains(post.id) == true
+                          ? Colors.blue
+                          : Colors.grey[600],
+                    ),
+                    label: Text(
+                      'Like',
+                      style: TextStyle(
+                        color: currentUser?.likedPosts.contains(post.id) == true
+                            ? Colors.blue
+                            : Colors.grey[700],
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _commentSectionVisibility[post.id] =
+                            !(_commentSectionVisibility[post.id] ?? false);
+                      });
+                    },
+                    icon:
+                        Icon(Icons.comment, size: 20, color: Colors.grey[600]),
+                    label: Text(
+                      'Comment',
+                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+          const Divider(height: 1),
+          if (_commentSectionVisibility[post.id] == true)
+            _buildCommentSection(post, currentUser),
+        ],
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+    }
+  }
+
+  Widget _buildCommentSection(PostModel post, dynamic currentUser) {
+    _commentControllers.putIfAbsent(
+      post.id,
+      () => TextEditingController(),
+    );
+
+    final controller = _commentControllers[post.id]!;
+
+    return Container(
+      color: Colors.grey[50],
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StreamBuilder<List<CommentModel>>(
+            stream: _communityService.getCommentsStream(post.id),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(
+                      color: Colors.teal,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                );
+              }
+
+              final comments = snapshot.data!;
+              if (comments.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'No comments yet. Be the first!',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  ),
+                );
+              }
+
+              return Column(
+                children: comments.map((comment) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundImage: comment.userAvatar.isNotEmpty
+                              ? NetworkImage(comment.userAvatar)
+                              : null,
+                          backgroundColor: Colors.teal[100],
+                          child: comment.userAvatar.isEmpty
+                              ? const Icon(Icons.person,
+                                  color: Colors.teal, size: 16)
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  comment.userName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  comment.content,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _getTimeAgo(comment.timestamp.toDate()),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          if (currentUser != null)
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: 'Write a comment...',
+                      hintStyle:
+                          TextStyle(fontSize: 14, color: Colors.grey[500]),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(color: Colors.teal),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                    ),
+                    maxLines: null,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (value) {
+                      if (value.trim().isNotEmpty) {
+                        final newComment = CommentModel(
+                          id: '',
+                          postId: post.id,
+                          userId: currentUser.id,
+                          userName: currentUser.name,
+                          userAvatar: currentUser.profileImageUrl ?? '',
+                          content: value.trim(),
+                          timestamp: Timestamp.now(),
+                        );
+                        _communityService.addComment(newComment);
+                        controller.clear();
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    if (controller.text.trim().isNotEmpty) {
+                      final newComment = CommentModel(
+                        id: '',
+                        postId: post.id,
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        userAvatar: currentUser.profileImageUrl ?? '',
+                        content: controller.text.trim(),
+                        timestamp: Timestamp.now(),
+                      );
+                      _communityService.addComment(newComment);
+                      controller.clear();
+                    }
+                  },
+                  icon: const Icon(Icons.send, color: Colors.teal),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

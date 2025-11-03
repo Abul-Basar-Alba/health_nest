@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../models/notification_model.dart';
 
 class NotificationService {
@@ -177,5 +178,83 @@ class NotificationService {
       type: 'system',
       data: data,
     );
+  }
+
+  // Send notification for post reaction
+  Future<void> sendReactionNotification({
+    required String postAuthorId,
+    required String reactorName,
+    required String reactionType,
+    required String postId,
+  }) async {
+    final emoji = _getReactionEmoji(reactionType);
+    await sendNotification(
+      userId: postAuthorId,
+      title: 'New Reaction',
+      message: '$reactorName reacted $emoji to your post',
+      type: 'post_reaction',
+      data: {
+        'postId': postId,
+        'reactionType': reactionType,
+      },
+    );
+  }
+
+  // Send notification for post comment
+  Future<void> sendCommentNotification({
+    required String postAuthorId,
+    required String commenterName,
+    required String commentText,
+    required String postId,
+  }) async {
+    await sendNotification(
+      userId: postAuthorId,
+      title: 'New Comment',
+      message:
+          '$commenterName commented: ${commentText.length > 50 ? "${commentText.substring(0, 50)}..." : commentText}',
+      type: 'post_comment',
+      data: {
+        'postId': postId,
+      },
+    );
+  }
+
+  // Send notification for comment reply
+  Future<void> sendCommentReplyNotification({
+    required String commentAuthorId,
+    required String replierName,
+    required String replyText,
+    required String postId,
+  }) async {
+    await sendNotification(
+      userId: commentAuthorId,
+      title: 'New Reply',
+      message:
+          '$replierName replied: ${replyText.length > 50 ? "${replyText.substring(0, 50)}..." : replyText}',
+      type: 'comment_reply',
+      data: {
+        'postId': postId,
+      },
+    );
+  }
+
+  // Get emoji for reaction type
+  String _getReactionEmoji(String type) {
+    switch (type) {
+      case 'like':
+        return '👍';
+      case 'love':
+        return '❤️';
+      case 'haha':
+        return '😄';
+      case 'wow':
+        return '😮';
+      case 'sad':
+        return '😢';
+      case 'angry':
+        return '😠';
+      default:
+        return '👍';
+    }
   }
 }

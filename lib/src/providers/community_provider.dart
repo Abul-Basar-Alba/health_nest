@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/post_model.dart';
+
 import '../models/comment_model.dart';
+import '../models/post_model.dart';
 import '../services/community_service.dart';
 import './user_provider.dart';
 
@@ -37,7 +38,7 @@ class CommunityProvider with ChangeNotifier {
         userId: currentUser.id,
         userName: currentUser.name,
         content: content,
-        likes: 0,
+        reactions: {}, // Empty reactions map
         comments: 0,
         timestamp: Timestamp.now(),
       );

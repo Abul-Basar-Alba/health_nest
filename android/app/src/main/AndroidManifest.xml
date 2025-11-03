@@ -16,7 +16,7 @@
     <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false" />
 
     <application
-        android:label="health_nest"
+        android:label="HealthNest"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         

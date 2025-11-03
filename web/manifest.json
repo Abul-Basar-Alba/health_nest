@@ -1,6 +1,6 @@
 {
-    "name": "health_nest",
-    "short_name": "health_nest",
+    "name": "HealthNest",
+    "short_name": "HealthNest",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

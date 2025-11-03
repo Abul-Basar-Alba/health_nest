@@ -14,6 +14,7 @@ import '../screens/auth/splash_auth_screen.dart';
 import '../screens/calculator_screen.dart';
 import '../screens/calculators/premium_bmi_calculator_screen.dart';
 import '../screens/community/community_screen.dart';
+import '../screens/community/premium_community_screen.dart';
 import '../screens/documentation_screen.dart';
 import '../screens/exercise_screen.dart';
 import '../screens/history/history_screen.dart'; // Updated import path
@@ -52,6 +53,7 @@ class AppRoutes {
   static const String stepCounter = '/step-counter';
   static const String history = '/history';
   static const String community = '/community';
+  static const String premiumCommunity = '/premium-community';
   static const String calculator = '/calculator';
   static const String premiumBMICalculator = '/premium-bmi-calculator';
   static const String recommendations = '/recommendations';
@@ -95,6 +97,7 @@ class AppRoutes {
       stepCounter: (context) => const StepCounterDashboardScreen(),
       history: (context) => const HistoryScreen(),
       community: (context) => const CommunityScreen(),
+      premiumCommunity: (context) => const PremiumCommunityScreen(),
       calculator: (context) => const CalculatorScreen(),
       premiumBMICalculator: (context) => const PremiumBMICalculatorScreen(),
       recommendations: (context) => const RecommendationScreen(),

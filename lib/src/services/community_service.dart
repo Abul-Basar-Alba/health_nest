@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/post_model.dart';
+
 import '../models/comment_model.dart';
+import '../models/post_model.dart';
 import 'notification_service.dart';
 
 class CommunityService {
@@ -28,7 +29,115 @@ class CommunityService {
             snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList());
   }
 
-  // Toggle like on a post
+  // Toggle reaction on a post (FB-style: like, love, haha, wow, sad, angry)
+  Future<void> toggleReaction(
+      String postId, String userId, String reactionType) async {
+    final postRef = _firestore.collection('posts').doc(postId);
+    final userReactionRef = postRef.collection('user_reactions').doc(userId);
+
+    await _firestore.runTransaction((transaction) async {
+      final postSnapshot = await transaction.get(postRef);
+      final userReactionSnapshot = await transaction.get(userReactionRef);
+
+      if (!postSnapshot.exists) throw Exception("Post does not exist!");
+
+      final postData = postSnapshot.data() as Map<String, dynamic>;
+      final reactions = Map<String, int>.from(postData['reactions'] ?? {});
+
+      if (userReactionSnapshot.exists) {
+        // User already reacted
+        final currentReaction =
+            userReactionSnapshot.data()!['reactionType'] as String;
+
+        if (currentReaction == reactionType) {
+          // Remove reaction (toggle off)
+          reactions[currentReaction] = (reactions[currentReaction] ?? 1) - 1;
+          if (reactions[currentReaction]! <= 0)
+            reactions.remove(currentReaction);
+          transaction.delete(userReactionRef);
+        } else {
+          // Change reaction
+          reactions[currentReaction] = (reactions[currentReaction] ?? 1) - 1;
+          if (reactions[currentReaction]! <= 0)
+            reactions.remove(currentReaction);
+          reactions[reactionType] = (reactions[reactionType] ?? 0) + 1;
+          transaction.update(userReactionRef, {
+            'reactionType': reactionType,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
+          // Send notification for new reaction type
+          _sendReactionNotification(postData, userId, reactionType);
+        }
+      } else {
+        // New reaction
+        reactions[reactionType] = (reactions[reactionType] ?? 0) + 1;
+        transaction.set(userReactionRef, {
+          'userId': userId,
+          'reactionType': reactionType,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        // Send notification
+        _sendReactionNotification(postData, userId, reactionType);
+      }
+
+      transaction.update(postRef, {'reactions': reactions});
+    });
+  }
+
+  // Get user's current reaction on a post
+  Future<String?> getUserReaction(String postId, String userId) async {
+    final doc = await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('user_reactions')
+        .doc(userId)
+        .get();
+
+    if (doc.exists) {
+      return doc.data()?['reactionType'] as String?;
+    }
+    return null;
+  }
+
+  // Send reaction notification
+  void _sendReactionNotification(
+      Map<String, dynamic> postData, String userId, String reactionType) async {
+    final postAuthorId = postData['userId'];
+    if (postAuthorId != userId) {
+      // Don't notify if reacting to own post
+      try {
+        final userDoc = await _firestore.collection('users').doc(userId).get();
+        final userName = userDoc.data()?['name'] ?? 'Someone';
+
+        final reactionEmojis = {
+          'like': '👍',
+          'love': '❤️',
+          'haha': '😂',
+          'wow': '😮',
+          'sad': '😢',
+          'angry': '😠',
+        };
+
+        await _notificationService.sendNotification(
+          userId: postAuthorId,
+          title: '${reactionEmojis[reactionType] ?? '👍'} New Reaction',
+          message: '$userName reacted $reactionType to your post',
+          type: 'reaction',
+          data: {
+            'postId': postData['id'] ?? '',
+            'fromUserId': userId,
+            'reactionType': reactionType
+          },
+        );
+      } catch (e) {
+        print('Error sending reaction notification: $e');
+      }
+    }
+  }
+
+  // Toggle like on a post (deprecated - use toggleReaction instead)
   Future<void> toggleLike(String postId, String userId) async {
     final postRef = _firestore.collection('posts').doc(postId);
     final userRef = _firestore.collection('users').doc(userId);
@@ -65,7 +174,7 @@ class CommunityService {
         final postAuthorId = postData['userId'];
         if (postAuthorId != userId) {
           final userData = userSnapshot.data() as Map<String, dynamic>;
-          final userName = userData['displayName'] ?? 'Someone';
+          final userName = userData['name'] ?? 'Someone';
 
           // Send notification after transaction completes
           Future.delayed(Duration.zero, () {
@@ -102,8 +211,7 @@ class CommunityService {
           // Get commenter's name
           final userDoc =
               await _firestore.collection('users').doc(comment.userId).get();
-          final userName =
-              userDoc.data()?['displayName'] ?? 'Someone';
+          final userName = userDoc.data()?['name'] ?? 'Someone';
 
           await _notificationService.sendNotification(
             userId: postAuthorId,
