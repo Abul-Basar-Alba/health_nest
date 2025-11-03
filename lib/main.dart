@@ -1,29 +1,40 @@
 // lib/main.dart
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
+
 import 'firebase_options.dart';
-import 'src/providers/user_provider.dart';
-import 'src/providers/history_provider.dart';
-import 'src/providers/step_provider.dart';
 import 'src/providers/chat_provider.dart';
-import 'src/providers/nutrition_provider.dart';
-import 'src/providers/recommendation_provider.dart';
 import 'src/providers/community_provider.dart';
 import 'src/providers/exercise_provider.dart'; // এই লাইনটি যোগ করা হয়েছে
-import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
+import 'src/providers/history_provider.dart';
 import 'src/providers/notification_provider.dart'; // Notification provider
-import 'src/routes/app_routes.dart';
+import 'src/providers/nutrition_provider.dart';
+import 'src/providers/recommendation_provider.dart';
+import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
+import 'src/providers/step_provider.dart';
+import 'src/providers/user_provider.dart';
 import 'src/providers/workout_history_provider.dart';
+import 'src/routes/app_routes.dart';
+import 'src/services/sleep_tracker_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // .env ফাইল লোড করা হবে সব প্ল্যাটফর্মে
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize timezone for notifications
+  tz.initializeTimeZones();
+
+  // Initialize sleep tracker notifications
+  final sleepService = SleepTrackerService();
+  await sleepService.initializeNotifications();
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(const MyApp());

@@ -29,7 +29,8 @@ class _StepCounterDashboardScreenState extends State<StepCounterDashboardScreen>
   List<DailySteps> _weeklySteps = [];
   int _dailyGoal = 10000;
   int _selectedDayIndex = 6; // Today by default
-  final bool _isPremium = false; // Set to true for premium features
+  // Step Counter is now FREE for all users - no premium required
+  final bool _isPremium = true; // Always true - Step Counter is free
   late AnimationController _progressController;
   late AnimationController _pulseController;
   late Animation<double> _progressAnimation;
@@ -40,6 +41,7 @@ class _StepCounterDashboardScreenState extends State<StepCounterDashboardScreen>
     super.initState();
     _loadWeeklySteps();
     _loadDailyGoal();
+    // Step Counter is FREE - no need to check premium status
     _initializeAnimations();
     _requestStepPermission();
   }

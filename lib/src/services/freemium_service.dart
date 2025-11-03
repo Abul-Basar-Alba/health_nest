@@ -395,6 +395,60 @@ class FreemiumService {
     }
   }
 
+  // 🎯 Activate Premium Subscription (Called after successful payment)
+  static Future<bool> activatePremiumSubscription({
+    required String planType, // 'monthly' or 'yearly'
+    required String transactionId,
+    required double amount,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      // Calculate subscription end date
+      final now = DateTime.now();
+      final endDate = planType == 'yearly'
+          ? now.add(const Duration(days: 365))
+          : now.add(const Duration(days: 30));
+
+      // Update user document
+      await _firestore.collection('users').doc(user.uid).update({
+        'isPremium': true,
+        'subscriptionPlan': planType,
+        'subscriptionStartDate': Timestamp.fromDate(now),
+        'subscriptionEndDate': Timestamp.fromDate(endDate),
+        'lastPaymentDate': Timestamp.fromDate(now),
+        'lastPaymentAmount': amount,
+        'lastTransactionId': transactionId,
+        'updatedAt': Timestamp.now(),
+      });
+
+      // Log payment history
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('payment_history')
+          .add({
+        'planType': planType,
+        'amount': amount,
+        'transactionId': transactionId,
+        'paymentDate': Timestamp.fromDate(now),
+        'subscriptionEndDate': Timestamp.fromDate(endDate),
+        'status': 'successful',
+        'method': 'SSLCommerz',
+      });
+
+      print('✅ Premium activated successfully for user ${user.uid}');
+      print('   Plan: $planType');
+      print('   Valid until: $endDate');
+
+      return true;
+    } catch (e) {
+      print('❌ Error activating premium: $e');
+      return false;
+    }
+  }
+
   // Get today's usage for all features
   static Future<Map<String, int>> getTodayUsage() async {
     try {

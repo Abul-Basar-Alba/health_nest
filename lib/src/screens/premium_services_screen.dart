@@ -764,14 +764,20 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.payment, size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          'Subscribe Now - ${plan['price']}${plan['period']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Subscribe Now - ${plan['price']}${plan['period']}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -779,13 +785,18 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Then ${plan['price']}${plan['period']} • Cancel anytime',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Then ${plan['price']}${plan['period']} • Cancel anytime',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -1045,24 +1056,41 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
         builder: (context) => AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.orange[600]),
+              Icon(Icons.info_outline, color: Colors.orange[600], size: 20),
               const SizedBox(width: 8),
-              const Text('Free Trial Already Used'),
+              const Flexible(
+                child: Text(
+                  'Free Trial Already Used',
+                  style: TextStyle(fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
-          content: const Text('আপনি আগেই ৭ দিনের ফ্রি ট্রায়াল ব্যবহার করেছেন। '
-              'এখন প্রিমিয়াম সাবস্ক্রিপশনের জন্য পেমেন্ট করতে হবে।'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'আপনি আগেই ৭ দিনের ফ্রি ট্রায়াল ব্যবহার করেছেন। '
+                  'এখন প্রিমিয়াম সাবস্ক্রিপশনের জন্য পেমেন্ট করতে হবে।',
+                  style: TextStyle(fontSize: 14, height: 1.4),
+                ),
+              ],
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('ঠিক আছে'),
+              child: const Text('ঠিক আছে', style: TextStyle(fontSize: 14)),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 _startPayment(plan);
               },
-              child: const Text('পেমেন্ট করুন'),
+              child: const Text('পেমেন্ট করুন', style: TextStyle(fontSize: 14)),
             ),
           ],
         ),
@@ -1169,39 +1197,71 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.payment, color: Colors.blue[600]),
+            Icon(Icons.payment, color: Colors.blue[600], size: 20),
             const SizedBox(width: 8),
-            Text('Select Payment Method'),
+            const Flexible(
+              child: Text(
+                'Select Payment Method',
+                style: TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
           width: double.maxFinite,
+          height: MediaQuery.of(context).size.height * 0.5,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Amount: ${plan['price']}${plan['period']}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Amount: ${plan['price']}${plan['period']}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 16),
-              ...PaymentService.getPaymentMethods().map(
-                (method) => Card(
-                  child: ListTile(
-                    leading: Text(
-                      method['icon'],
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                    title: Text(method['name']),
-                    subtitle: Text(method['description']),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _processPayment(plan, method);
-                    },
-                  ),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: PaymentService.getPaymentMethods().length,
+                  itemBuilder: (context, index) {
+                    final method = PaymentService.getPaymentMethods()[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        leading: Text(
+                          method['icon'],
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        title: Text(
+                          method['name'],
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          method['description'],
+                          style: const TextStyle(fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _processPayment(plan, method);
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -1264,9 +1324,15 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
           builder: (context) => AlertDialog(
             title: Row(
               children: [
-                Icon(Icons.info, color: Colors.blue[600]),
+                Icon(Icons.info, color: Colors.blue[600], size: 20),
                 const SizedBox(width: 8),
-                const Text('Payment Gateway Ready'),
+                const Flexible(
+                  child: Text(
+                    'Payment Gateway Ready',
+                    style: TextStyle(fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             content: SingleChildScrollView(
@@ -1279,10 +1345,16 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                     style: TextStyle(
                       color: Colors.green[600],
                       fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
-                  const Text('📱 Demo Payment করতে:'),
+                  const Text(
+                    '📱 Demo Payment করতে:',
+                    style: TextStyle(fontSize: 13),
+                  ),
                   const SizedBox(height: 8),
 
                   // bKash Demo Info
@@ -1298,11 +1370,14 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('💰 bKash Demo:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('• Mobile: 01700000000'),
-                          Text('• PIN: 1234'),
-                          Text('• OTP: 123456'),
-                          Text('• Amount: ৳${plan['paymentAmount']}'),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('• Mobile: 01700000000',
+                              style: TextStyle(fontSize: 12)),
+                          Text('• PIN: 1234', style: TextStyle(fontSize: 12)),
+                          Text('• OTP: 123456', style: TextStyle(fontSize: 12)),
+                          Text('• Amount: ৳${plan['paymentAmount']}',
+                              style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -1321,11 +1396,14 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('💸 Nagad Demo:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('• Mobile: 01600000000'),
-                          Text('• PIN: 1234'),
-                          Text('• OTP: 123456'),
-                          Text('• Amount: ৳${plan['paymentAmount']}'),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('• Mobile: 01600000000',
+                              style: TextStyle(fontSize: 12)),
+                          Text('• PIN: 1234', style: TextStyle(fontSize: 12)),
+                          Text('• OTP: 123456', style: TextStyle(fontSize: 12)),
+                          Text('• Amount: ৳${plan['paymentAmount']}',
+                              style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -1344,11 +1422,15 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('💳 Demo Card:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('• Card: 4242424242424242'),
-                          Text('• CVV: 123'),
-                          Text('• Expiry: 12/25'),
-                          Text('• Amount: ৳${plan['paymentAmount']}'),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('• Card: 4242424242424242',
+                              style: TextStyle(fontSize: 12)),
+                          Text('• CVV: 123', style: TextStyle(fontSize: 12)),
+                          Text('• Expiry: 12/25',
+                              style: TextStyle(fontSize: 12)),
+                          Text('• Amount: ৳${plan['paymentAmount']}',
+                              style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -1433,58 +1515,108 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green[600]),
+            Icon(Icons.check_circle, color: Colors.green[600], size: 20),
             const SizedBox(width: 8),
-            const Text('Payment Successful!'),
+            const Flexible(
+              child: Text(
+                'Payment Successful!',
+                style: TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '🎉 Payment completed successfully!',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '🎉 Payment completed successfully!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(height: 12),
-            const Text('✅ Premium subscription activated'),
-            const Text('✅ All features unlocked'),
-            const Text('✅ SMS confirmation sent'),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green[200]!),
+              const SizedBox(height: 12),
+              const Text(
+                '✅ Premium subscription activated',
+                style: TextStyle(fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Subscription Details:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text('Plan: ${plan['title']}'),
-                  Text('Amount: ${plan['price']}${plan['period']}'),
-                  Text('Transaction: ${paymentResult['tran_id']}'),
-                  Text('Status: Active'),
-                ],
+              const Text(
+                '✅ All features unlocked',
+                style: TextStyle(fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'আপনার প্রিমিয়াম সাবস্ক্রিপশন এখনই active হয়ে গেছে! '
-              'সব ফিচার এখন unlimited ব্যবহার করতে পারবেন।',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
+              const Text(
+                '✅ SMS confirmation sent',
+                style: TextStyle(fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Subscription Details:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Plan: ${plan['title']}',
+                      style: const TextStyle(fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Amount: ${plan['price']}${plan['period']}',
+                      style: const TextStyle(fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Transaction: ${paymentResult['tran_id']}',
+                      style: const TextStyle(fontSize: 11),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Text(
+                      'Status: Active',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'আপনার প্রিমিয়াম সাবস্ক্রিপশন এখনই active হয়ে গেছে! '
+                'সব ফিচার এখন unlimited ব্যবহার করতে পারবেন।',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
         actions: [
           ElevatedButton(
@@ -1492,7 +1624,13 @@ class _PremiumServicesScreenState extends State<PremiumServicesScreen>
               Navigator.pop(context);
               Navigator.pop(context); // Go back to previous screen
             },
-            child: const Text('Great! Start Using'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: const Text(
+              'Great! Start Using',
+              style: TextStyle(fontSize: 13),
+            ),
           ),
         ],
       ),

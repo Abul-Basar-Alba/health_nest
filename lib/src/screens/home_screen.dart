@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/history_provider.dart';
 import '../providers/user_provider.dart';
 import '../routes/app_routes.dart';
+import '../screens/sleep_tracker_screen.dart';
 import '../services/freemium_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -406,6 +407,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Icons.directions_walk,
                 const Color(0xFF00CED1),
                 () => Navigator.pushNamed(context, AppRoutes.stepCounter),
+              ),
+              _buildActionCard(
+                'Sleep',
+                Icons.bedtime_rounded,
+                const Color(0xFF7C4DFF),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SleepTrackerScreen(),
+                  ),
+                ),
               ),
               _buildActionCard(
                 'History',
