@@ -10,14 +10,19 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'firebase_options.dart';
 import 'src/providers/chat_provider.dart';
 import 'src/providers/community_provider.dart';
+import 'src/providers/drug_interaction_provider.dart';
 import 'src/providers/exercise_provider.dart'; // এই লাইনটি যোগ করা হয়েছে
+import 'src/providers/family_provider.dart';
+import 'src/providers/health_diary_provider.dart';
 import 'src/providers/history_provider.dart';
+import 'src/providers/medicine_reminder_provider.dart';
 import 'src/providers/notification_provider.dart'; // Notification provider
 import 'src/providers/nutrition_provider.dart';
 import 'src/providers/recommendation_provider.dart';
 import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
 import 'src/providers/step_provider.dart';
 import 'src/providers/user_provider.dart';
+import 'src/providers/water_reminder_provider.dart';
 import 'src/providers/workout_history_provider.dart';
 import 'src/routes/app_routes.dart';
 import 'src/services/sleep_tracker_service.dart';
@@ -60,6 +65,11 @@ class MyApp extends StatelessWidget {
             create: (_) =>
                 WorkoutHistoryProvider()), // এই লাইনটি যোগ করা হয়েছে
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => WaterReminderProvider()),
+        ChangeNotifierProvider(create: (_) => MedicineReminderProvider()),
+        ChangeNotifierProvider(create: (_) => FamilyProvider()),
+        ChangeNotifierProvider(create: (_) => HealthDiaryProvider()),
+        ChangeNotifierProvider(create: (_) => DrugInteractionProvider()),
       ],
       child: MaterialApp(
         title: 'HealthNest',

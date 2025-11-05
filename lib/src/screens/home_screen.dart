@@ -4,7 +4,11 @@ import 'package:provider/provider.dart';
 import '../providers/history_provider.dart';
 import '../providers/user_provider.dart';
 import '../routes/app_routes.dart';
+import '../screens/family_profiles_screen.dart';
+import '../screens/health_diary_screen.dart';
+import '../screens/medicine_reminder_screen.dart';
 import '../screens/sleep_tracker_screen.dart';
+import '../screens/water_reminder_screen.dart';
 import '../services/freemium_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -416,6 +420,50 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const SleepTrackerScreen(),
+                  ),
+                ),
+              ),
+              _buildActionCard(
+                'Water',
+                Icons.water_drop,
+                const Color(0xFF2196F3),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WaterReminderScreen(),
+                  ),
+                ),
+              ),
+              _buildActionCard(
+                'Medicine',
+                Icons.medication,
+                const Color(0xFF009688),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MedicineReminderScreen(),
+                  ),
+                ),
+              ),
+              _buildActionCard(
+                'Family',
+                Icons.people,
+                const Color(0xFFFF9800),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FamilyProfilesScreen(),
+                  ),
+                ),
+              ),
+              _buildActionCard(
+                'Health Diary',
+                Icons.favorite,
+                const Color(0xFFE91E63),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HealthDiaryScreen(),
                   ),
                 ),
               ),
