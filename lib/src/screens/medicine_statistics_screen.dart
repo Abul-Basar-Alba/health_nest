@@ -4,16 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-import '../providers/medicine_reminder_provider.dart';
 import '../services/medicine_reminder_service.dart';
 
 class MedicineStatisticsScreen extends StatefulWidget {
   const MedicineStatisticsScreen({super.key});
 
   @override
-  State<MedicineStatisticsScreen> createState() => _MedicineStatisticsScreenState();
+  State<MedicineStatisticsScreen> createState() =>
+      _MedicineStatisticsScreenState();
 }
 
 class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
@@ -29,21 +28,56 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
 
   Future<void> _loadStatistics() async {
     setState(() => _isLoading = true);
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final service = MedicineReminderService();
-      final stats = await service.getDetailedStatistics(userId, _selectedDays);
-      setState(() {
-        _stats = stats;
-        _isLoading = false;
-      });
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        final service = MedicineReminderService();
+        final stats =
+            await service.getDetailedStatistics(userId, _selectedDays).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            // Return empty stats on timeout
+            return {
+              'totalDoses': 0,
+              'takenDoses': 0,
+              'missedDoses': 0,
+              'activeMedicines': 0,
+              'medicineStats': [],
+              'recentLogs': [],
+            };
+          },
+        );
+        if (mounted) {
+          setState(() {
+            _stats = stats;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      print('Error loading statistics: $e');
+      if (mounted) {
+        setState(() {
+          _stats = {
+            'totalDoses': 0,
+            'takenDoses': 0,
+            'missedDoses': 0,
+            'activeMedicines': 0,
+            'medicineStats': [],
+            'recentLogs': [],
+          };
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<MedicineReminderProvider>();
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -67,7 +101,7 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
                 children: [
                   _buildTimeRangeSelector(),
                   const SizedBox(height: 20),
-                  _buildAdherenceCard(provider.adherenceRate),
+                  _buildAdherenceCard(_calculateAdherenceRate()),
                   const SizedBox(height: 16),
                   _buildStatsGrid(),
                   const SizedBox(height: 16),
@@ -78,6 +112,18 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
               ),
             ),
     );
+  }
+
+  // Calculate real-time adherence from actual statistics data
+  double _calculateAdherenceRate() {
+    if (_stats == null) return 0.0;
+
+    final totalDoses = _stats!['totalDoses'] as int;
+    final takenDoses = _stats!['takenDoses'] as int;
+
+    if (totalDoses == 0) return 0.0;
+
+    return (takenDoses / totalDoses * 100);
   }
 
   Widget _buildTimeRangeSelector() {
@@ -203,9 +249,9 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.3,
       children: [
         _buildStatCard(
           'Total Doses',
@@ -235,9 +281,10 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -252,24 +299,32 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 6),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
+          const SizedBox(height: 2),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -313,8 +368,9 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final stat = medicineStats[index];
-              final adherence = (stat['taken'] / stat['total'] * 100).toStringAsFixed(1);
-              
+              final adherence =
+                  (stat['taken'] / stat['total'] * 100).toStringAsFixed(1);
+
               return ListTile(
                 contentPadding: const EdgeInsets.all(16),
                 leading: Container(
@@ -334,7 +390,8 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
                 ),
                 subtitle: Text('${stat['taken']}/${stat['total']} doses taken'),
                 trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _getAdherenceColor(double.parse(adherence)),
                     borderRadius: BorderRadius.circular(12),
@@ -400,10 +457,10 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
             itemBuilder: (context, index) {
               final log = recentLogs[index];
               final status = log['status'] as String;
-              
+
               Color statusColor;
               IconData statusIcon;
-              
+
               switch (status) {
                 case 'taken':
                   statusColor = Colors.green;
@@ -418,9 +475,10 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
                   statusIcon = Icons.help;
               }
 
-              final scheduledTime = (log['scheduledTime'] as Timestamp).toDate();
-              final takenTime = log['takenTime'] != null 
-                  ? (log['takenTime'] as Timestamp).toDate() 
+              final scheduledTime =
+                  (log['scheduledTime'] as Timestamp).toDate();
+              final takenTime = log['takenTime'] != null
+                  ? (log['takenTime'] as Timestamp).toDate()
                   : null;
 
               return ListTile(
@@ -433,13 +491,16 @@ class _MedicineStatisticsScreenState extends State<MedicineStatisticsScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Scheduled: ${DateFormat('MMM d, h:mm a').format(scheduledTime)}'),
+                    Text(
+                        'Scheduled: ${DateFormat('MMM d, h:mm a').format(scheduledTime)}'),
                     if (takenTime != null)
-                      Text('Taken: ${DateFormat('MMM d, h:mm a').format(takenTime)}'),
+                      Text(
+                          'Taken: ${DateFormat('MMM d, h:mm a').format(takenTime)}'),
                   ],
                 ),
                 trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),

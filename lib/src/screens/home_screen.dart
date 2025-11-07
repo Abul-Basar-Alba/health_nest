@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../providers/history_provider.dart';
+import '../providers/pregnancy_provider.dart';
 import '../providers/user_provider.dart';
 import '../routes/app_routes.dart';
 import '../screens/family_profiles_screen.dart';
@@ -32,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _initAnimations();
     _startAnimations();
     _fetchHistoryData();
+    _loadPregnancyData();
   }
 
   void _fetchHistoryData() {
@@ -40,6 +43,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Provider.of<HistoryProvider>(context, listen: false);
     if (userProvider.user != null) {
       historyProvider.fetchHistory(userProvider.user!.id);
+    }
+  }
+
+  void _loadPregnancyData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final pregnancyProvider =
+        Provider.of<PregnancyProvider>(context, listen: false);
+
+    if (authProvider.user != null &&
+        pregnancyProvider.activePregnancy == null) {
+      try {
+        await pregnancyProvider.loadActivePregnancy(authProvider.user!.uid);
+      } catch (e) {
+        debugPrint('Failed to load pregnancy data: $e');
+      }
     }
   }
 
@@ -466,6 +484,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     builder: (context) => const HealthDiaryScreen(),
                   ),
                 ),
+              ),
+              _buildActionCard(
+                'Pregnancy',
+                Icons.pregnant_woman,
+                const Color(0xFFFFB6C1),
+                () => Navigator.pushNamed(context, AppRoutes.pregnancyTracker),
               ),
               _buildActionCard(
                 'History',

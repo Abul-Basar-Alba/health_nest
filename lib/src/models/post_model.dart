@@ -10,6 +10,10 @@ class PostModel {
   final Map<String, int> reactions; // {'like': 5, 'love': 3, 'haha': 1}
   final int comments;
   final Timestamp timestamp;
+  final String category; // 'general', 'pregnancy', 'medicine', 'fitness'
+  final String? pregnancyDueDate; // For pregnancy posts only
+  final String? pregnancyWeek; // For pregnancy posts only
+  final List<String> tags; // Topics: 'symptoms', 'nutrition', 'exercise', etc.
 
   PostModel({
     required this.id,
@@ -21,7 +25,12 @@ class PostModel {
     Map<String, int>? reactions,
     this.comments = 0,
     required this.timestamp,
-  }) : reactions = reactions ?? {};
+    this.category = 'general',
+    this.pregnancyDueDate,
+    this.pregnancyWeek,
+    List<String>? tags,
+  })  : reactions = reactions ?? {},
+        tags = tags ?? [];
 
   // Get total reactions count
   int get totalReactions =>
@@ -52,6 +61,10 @@ class PostModel {
       reactions: Map<String, int>.from(data['reactions'] ?? {}),
       comments: data['comments'] ?? 0,
       timestamp: data['timestamp'] as Timestamp,
+      category: data['category'] ?? 'general',
+      pregnancyDueDate: data['pregnancyDueDate'],
+      pregnancyWeek: data['pregnancyWeek'],
+      tags: data['tags'] != null ? List<String>.from(data['tags']) : [],
     );
   }
 
@@ -66,6 +79,10 @@ class PostModel {
       'reactions': reactions,
       'comments': comments,
       'timestamp': timestamp,
+      'category': category,
+      'pregnancyDueDate': pregnancyDueDate,
+      'pregnancyWeek': pregnancyWeek,
+      'tags': tags,
     };
   }
 }

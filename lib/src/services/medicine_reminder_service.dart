@@ -483,88 +483,101 @@ class MedicineReminderService {
   // Get detailed statistics
   Future<Map<String, dynamic>> getDetailedStatistics(
       String userId, int days) async {
-    final startDate = DateTime.now().subtract(Duration(days: days));
+    try {
+      final startDate = DateTime.now().subtract(Duration(days: days));
 
-    // Get all logs in date range - removed orderBy to avoid index requirement
-    final logsSnapshot = await _firestore
-        .collection('medicine_logs')
-        .where('userId', isEqualTo: userId)
-        .where('scheduledTime',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-        .get();
+      // Get all logs in date range - removed orderBy to avoid index requirement
+      final logsSnapshot = await _firestore
+          .collection('medicine_logs')
+          .where('userId', isEqualTo: userId)
+          .where('scheduledTime',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .get();
 
-    // Sort in memory
-    final sortedDocs = logsSnapshot.docs.toList();
-    sortedDocs.sort((a, b) {
-      final aTime = (a.data()['scheduledTime'] as Timestamp).toDate();
-      final bTime = (b.data()['scheduledTime'] as Timestamp).toDate();
-      return bTime.compareTo(aTime); // descending
-    });
+      // Sort in memory
+      final sortedDocs = logsSnapshot.docs.toList();
+      sortedDocs.sort((a, b) {
+        final aTime = (a.data()['scheduledTime'] as Timestamp).toDate();
+        final bTime = (b.data()['scheduledTime'] as Timestamp).toDate();
+        return bTime.compareTo(aTime); // descending
+      });
 
-    final totalDoses = sortedDocs.length;
-    final takenDoses =
-        sortedDocs.where((doc) => doc.data()['status'] == 'taken').length;
-    final missedDoses =
-        sortedDocs.where((doc) => doc.data()['status'] == 'missed').length;
+      final totalDoses = sortedDocs.length;
+      final takenDoses =
+          sortedDocs.where((doc) => doc.data()['status'] == 'taken').length;
+      final missedDoses =
+          sortedDocs.where((doc) => doc.data()['status'] == 'missed').length;
 
-    // Get active medicines count
-    final medicinesSnapshot = await _firestore
-        .collection('medicines')
-        .where('userId', isEqualTo: userId)
-        .where('isActive', isEqualTo: true)
-        .get();
+      // Get active medicines count
+      final medicinesSnapshot = await _firestore
+          .collection('medicines')
+          .where('userId', isEqualTo: userId)
+          .where('isActive', isEqualTo: true)
+          .get();
 
-    final activeMedicines = medicinesSnapshot.docs.length;
+      final activeMedicines = medicinesSnapshot.docs.length;
 
-    // Get medicine-wise stats
-    final medicineStats = <Map<String, dynamic>>[];
-    for (final medDoc in medicinesSnapshot.docs) {
-      final medicine = MedicineModel.fromMap(medDoc.id, medDoc.data());
+      // Get medicine-wise stats
+      final medicineStats = <Map<String, dynamic>>[];
+      for (final medDoc in medicinesSnapshot.docs) {
+        final medicine = MedicineModel.fromMap(medDoc.id, medDoc.data());
 
-      final medLogs = sortedDocs
-          .where((log) => log.data()['medicineId'] == medicine.id)
-          .toList();
+        final medLogs = sortedDocs
+            .where((log) => log.data()['medicineId'] == medicine.id)
+            .toList();
 
-      if (medLogs.isNotEmpty) {
-        final medTaken =
-            medLogs.where((log) => log.data()['status'] == 'taken').length;
+        if (medLogs.isNotEmpty) {
+          final medTaken =
+              medLogs.where((log) => log.data()['status'] == 'taken').length;
 
-        medicineStats.add({
-          'medicineName': medicine.medicineName,
-          'total': medLogs.length,
-          'taken': medTaken,
-          'missed': medLogs.length - medTaken,
-        });
+          medicineStats.add({
+            'medicineName': medicine.medicineName,
+            'total': medLogs.length,
+            'taken': medTaken,
+            'missed': medLogs.length - medTaken,
+          });
+        }
       }
-    }
 
-    // Get recent logs with medicine names
-    final recentLogs = <Map<String, dynamic>>[];
-    for (final log in sortedDocs.take(10)) {
-      final logData = log.data();
-      final medicineId = logData['medicineId'];
+      // Get recent logs with medicine names
+      final recentLogs = <Map<String, dynamic>>[];
+      for (final log in sortedDocs.take(10)) {
+        final logData = log.data();
+        final medicineId = logData['medicineId'];
 
-      final medDoc =
-          await _firestore.collection('medicines').doc(medicineId).get();
-      if (medDoc.exists) {
-        final medicineName = medDoc.data()?['medicineName'] ?? 'Unknown';
+        final medDoc =
+            await _firestore.collection('medicines').doc(medicineId).get();
+        if (medDoc.exists) {
+          final medicineName = medDoc.data()?['medicineName'] ?? 'Unknown';
 
-        recentLogs.add({
-          'medicineName': medicineName,
-          'scheduledTime': logData['scheduledTime'],
-          'takenTime': logData['takenTime'],
-          'status': logData['status'],
-        });
+          recentLogs.add({
+            'medicineName': medicineName,
+            'scheduledTime': logData['scheduledTime'],
+            'takenTime': logData['takenTime'],
+            'status': logData['status'],
+          });
+        }
       }
-    }
 
-    return {
-      'totalDoses': totalDoses,
-      'takenDoses': takenDoses,
-      'missedDoses': missedDoses,
-      'activeMedicines': activeMedicines,
-      'medicineStats': medicineStats,
-      'recentLogs': recentLogs,
-    };
+      return {
+        'totalDoses': totalDoses,
+        'takenDoses': takenDoses,
+        'missedDoses': missedDoses,
+        'activeMedicines': activeMedicines,
+        'medicineStats': medicineStats,
+        'recentLogs': recentLogs,
+      };
+    } catch (e) {
+      print('Error in getDetailedStatistics: $e');
+      // Return empty stats on error
+      return {
+        'totalDoses': 0,
+        'takenDoses': 0,
+        'missedDoses': 0,
+        'activeMedicines': 0,
+        'medicineStats': [],
+        'recentLogs': [],
+      };
+    }
   }
 }

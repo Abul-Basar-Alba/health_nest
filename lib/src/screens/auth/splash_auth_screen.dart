@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:provider/provider.dart';
+
 import '../../config/auth_colors.dart';
+import '../../providers/pregnancy_provider.dart';
 import '../../services/enhanced_auth_service.dart';
 
 class SplashAuthScreen extends StatefulWidget {
@@ -33,6 +36,21 @@ class _SplashAuthScreenState extends State<SplashAuthScreen> {
     if (!mounted) return;
 
     if (isLoggedIn) {
+      // Load pregnancy data if user is logged in
+      final user = _authService.currentUser;
+      if (user != null && mounted) {
+        final pregnancyProvider =
+            Provider.of<PregnancyProvider>(context, listen: false);
+        try {
+          await pregnancyProvider.loadActivePregnancy(user.uid);
+        } catch (e) {
+          // Silent fail - pregnancy data is optional
+          debugPrint('Failed to load pregnancy data: $e');
+        }
+      }
+
+      if (!mounted) return;
+
       // Navigate to main navigation (with bottom bar)
       Navigator.of(context).pushReplacementNamed('/main');
     } else {

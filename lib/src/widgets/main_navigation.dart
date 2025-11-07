@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:health_nest/src/providers/notification_provider.dart';
+import 'package:health_nest/src/providers/pregnancy_provider.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:health_nest/src/screens/admin_contact_screen.dart';
 import 'package:health_nest/src/screens/admin_dashboard_screen.dart';
@@ -290,14 +291,20 @@ class MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
-    // Initialize notifications
+    // Initialize notifications and load pregnancy data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final notificationProvider =
           Provider.of<NotificationProvider>(context, listen: false);
+      final pregnancyProvider =
+          Provider.of<PregnancyProvider>(context, listen: false);
 
       if (userProvider.user?.id != null) {
+        // Initialize notifications
         notificationProvider.initialize(userProvider.user!.id);
+
+        // Load active pregnancy data
+        pregnancyProvider.loadActivePregnancy(userProvider.user!.id);
       }
     });
   }

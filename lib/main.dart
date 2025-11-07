@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'firebase_options.dart';
+import 'src/providers/auth_provider.dart';
 import 'src/providers/chat_provider.dart';
 import 'src/providers/community_provider.dart';
 import 'src/providers/drug_interaction_provider.dart';
@@ -18,6 +19,7 @@ import 'src/providers/history_provider.dart';
 import 'src/providers/medicine_reminder_provider.dart';
 import 'src/providers/notification_provider.dart'; // Notification provider
 import 'src/providers/nutrition_provider.dart';
+import 'src/providers/pregnancy_provider.dart'; // Pregnancy tracker
 import 'src/providers/recommendation_provider.dart';
 import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
 import 'src/providers/step_provider.dart';
@@ -42,7 +44,7 @@ void main() async {
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -53,6 +55,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
         ChangeNotifierProvider(create: (_) => StepProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
@@ -70,6 +73,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FamilyProvider()),
         ChangeNotifierProvider(create: (_) => HealthDiaryProvider()),
         ChangeNotifierProvider(create: (_) => DrugInteractionProvider()),
+        ChangeNotifierProvider(
+            create: (_) => PregnancyProvider()), // Pregnancy Tracker
       ],
       child: MaterialApp(
         title: 'HealthNest',

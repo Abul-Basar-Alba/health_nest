@@ -29,6 +29,62 @@ class CommunityService {
             snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList());
   }
 
+  // Stream posts by category
+  Stream<List<PostModel>> getPostsByCategory(String category) {
+    return _firestore
+        .collection('posts')
+        .where('category', isEqualTo: category)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList());
+  }
+
+  // Stream pregnancy posts by due date month/year
+  Stream<List<PostModel>> getPregnancyPostsByDueDate(
+      String monthYear) // Format: "January 2025"
+  {
+    return _firestore
+        .collection('posts')
+        .where('category', isEqualTo: 'pregnancy')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      final posts =
+          snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+      // Filter by due date month/year
+      return posts.where((post) {
+        if (post.pregnancyDueDate == null) return false;
+        try {
+          final dueDate = DateTime.parse(post.pregnancyDueDate!);
+          final dueDateMonthYear =
+              '${_getMonthName(dueDate.month)} ${dueDate.year}';
+          return dueDateMonthYear == monthYear;
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    });
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    return months[month - 1];
+  }
+
   // Toggle reaction on a post (FB-style: like, love, haha, wow, sad, angry)
   Future<void> toggleReaction(
       String postId, String userId, String reactionType) async {

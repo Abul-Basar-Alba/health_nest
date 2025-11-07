@@ -5,7 +5,6 @@ import 'package:health_nest/src/widgets/main_navigation.dart';
 
 import '../screens/admin_contact_screen.dart';
 import '../screens/admin_dashboard_screen.dart'; // New: Admin Dashboard
-import '../screens/admin_panel_screen.dart'; // New: Import AdminPanelScreen
 import '../screens/auth/modern_login_screen.dart';
 import '../screens/auth/modern_signup_screen.dart';
 import '../screens/auth/profile_setup_screen.dart';
@@ -13,8 +12,8 @@ import '../screens/auth/profile_setup_screen.dart';
 import '../screens/auth/splash_auth_screen.dart';
 import '../screens/calculator_screen.dart';
 import '../screens/calculators/premium_bmi_calculator_screen.dart';
-import '../screens/community/community_screen.dart';
 import '../screens/community/premium_community_screen.dart';
+import '../screens/community_screen.dart';
 import '../screens/documentation_screen.dart';
 import '../screens/exercise_screen.dart';
 import '../screens/history/history_screen.dart'; // Updated import path
@@ -26,6 +25,15 @@ import '../screens/messaging/chat_screen.dart';
 import '../screens/messaging/profile_view_screen.dart';
 import '../screens/nutrition_screen.dart';
 import '../screens/paid_services_screen.dart';
+import '../screens/pregnancy/bump_photos_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/contraction_timer_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/doctor_visits_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/family_support_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/kick_counter_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/postpartum_tracker_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/pregnancy_report_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/pregnancy_tracker_screen.dart'; // Pregnancy Tracker
+import '../screens/pregnancy/week_details_screen.dart'; // Pregnancy Tracker
 import '../screens/premium_services_screen.dart'; // New: Import PremiumServicesScreen
 import '../screens/profile/change_password_screen.dart';
 // Profile Screens
@@ -35,6 +43,7 @@ import '../screens/progress_tracker_screen.dart'; // New: Import ProgressTracker
 import '../screens/recommendation_screen.dart';
 import '../screens/settings/account_settings_screen.dart'; // Settings Screens
 import '../screens/settings/privacy_settings_screen.dart'; // Settings Screens
+import '../screens/settings/voice_settings_screen.dart'; // Settings Screens
 import '../screens/step_counter_dashboard_screen.dart'; // Step Counter (New)
 import '../screens/vscode_firebase_manager.dart';
 
@@ -64,17 +73,27 @@ class AppRoutes {
   static const String changePassword = '/change-password';
   static const String privacySettings = '/privacy-settings'; // New
   static const String accountSettings = '/account-settings'; // New
+  static const String voiceSettings = '/voice-settings'; // New
+  static const String pregnancyReport = '/pregnancy-report'; // New
   static const String documentation = '/documentation';
   static const String paidServices = '/paid-services';
   static const String premiumServices =
       '/premium-services'; // New: Premium services route
   static const String premium = '/premium'; // Premium/Subscription screen
-  static const String stepCount = '/step-count';
-  static const String adminPanel = '/admin-panel'; // New: Admin panel route
-  static const String adminDashboard =
-      '/admin-dashboard'; // New: Admin dashboard route
   static const String progressTracker =
       '/progress-tracker'; // New: Progress tracker route
+  static const String adminDashboard =
+      '/admin-dashboard'; // Admin Dashboard route
+
+  // Pregnancy Tracker routes
+  static const String pregnancyTracker = '/pregnancy-tracker';
+  static const String weekDetails = '/week-details';
+  static const String kickCounter = '/kick-counter';
+  static const String contractionTimer = '/contraction-timer';
+  static const String doctorVisits = '/doctor-visits';
+  static const String familySupport = '/family-support';
+  static const String bumpPhotos = '/bump-photos';
+  static const String postpartumTracker = '/postpartum-tracker';
 
   // Messaging routes
   static const String chatList = '/chat-list';
@@ -107,21 +126,32 @@ class AppRoutes {
       changePassword: (context) => const ChangePasswordScreen(),
       privacySettings: (context) => const PrivacySettingsScreen(), // New
       accountSettings: (context) => const AccountSettingsScreen(), // New
+      voiceSettings: (context) => const VoiceSettingsScreen(), // New
+      pregnancyReport: (context) => const PregnancyReportScreen(), // New
       documentation: (context) => const DocumentationScreen(),
       paidServices: (context) => const PaidServicesScreen(),
       premiumServices: (context) =>
           const PremiumServicesScreen(), // New: Add PremiumServicesScreen
       premium: (context) =>
           const PremiumServicesScreen(), // Premium route for subscription management
-      stepCount: (context) =>
-          const StepCounterDashboardScreen(), // Redirect to new step counter
-      adminPanel: (context) =>
-          const AdminPanelScreen(), // New: Add AdminPanelScreen
-      adminDashboard: (context) =>
-          const AdminDashboardScreen(), // New: Admin Dashboard
       progressTracker: (context) =>
           const ProgressTrackerScreen(), // New: Add ProgressTrackerScreen
+      pregnancyTracker: (context) =>
+          const PregnancyTrackerScreen(), // Pregnancy Tracker
+      weekDetails: (context) => const WeekDetailsScreen(), // Pregnancy Tracker
+      kickCounter: (context) => const KickCounterScreen(), // Pregnancy Tracker
+      contractionTimer: (context) =>
+          const ContractionTimerScreen(), // Pregnancy Tracker
+      doctorVisits: (context) =>
+          const DoctorVisitsScreen(), // Pregnancy Tracker
+      familySupport: (context) =>
+          const FamilySupportScreen(), // Pregnancy Tracker
+      bumpPhotos: (context) => const BumpPhotosScreen(), // Pregnancy Tracker
+      postpartumTracker: (context) =>
+          const PostpartumTrackerScreen(), // Pregnancy Tracker
       chatList: (context) => const ChatListScreen(),
+      adminDashboard: (context) =>
+          const AdminDashboardScreen(), // New: Admin Dashboard
       vscodeFirebaseManager: (context) => const VSCodeFirebaseManager(),
     };
   }

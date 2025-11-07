@@ -6,8 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/drug_interaction_model.dart';
+import '../models/family_member_model.dart';
 import '../models/medicine_model.dart';
 import '../providers/drug_interaction_provider.dart';
+import '../providers/family_provider.dart';
 import '../providers/medicine_reminder_provider.dart';
 import 'drug_interaction_screen.dart';
 import 'medicine_statistics_screen.dart';
@@ -410,12 +412,48 @@ class _MedicineReminderScreenState extends State<MedicineReminderScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '${medicine.dosage} • ${medicine.medicineType}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
+                        Row(
+                          children: [
+                            // NEW: Family member badge
+                            if (medicine.familyMemberName != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                      color: Colors.orange.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.person,
+                                        size: 12, color: Colors.orange),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      medicine.familyMemberName!,
+                                      style: const TextStyle(
+                                        color: Colors.orange,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Expanded(
+                              child: Text(
+                                '${medicine.dosage} • ${medicine.medicineType}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -592,6 +630,8 @@ class _AddEditMedicineDialogState extends State<AddEditMedicineDialog> {
   List<String> _weekDays = [];
   int _refillThreshold = 5;
   DateTime? _prescriptionExpiryDate;
+  String? _selectedFamilyMemberId; // NEW: For family member selection
+  String? _selectedFamilyMemberName; // NEW: For display
 
   @override
   void initState() {
@@ -612,6 +652,8 @@ class _AddEditMedicineDialogState extends State<AddEditMedicineDialog> {
     if (widget.medicine != null) {
       _frequency = widget.medicine!.frequency;
       _medicineType = widget.medicine!.medicineType ?? 'Tablet';
+      _selectedFamilyMemberId = widget.medicine!.familyMemberId; // NEW
+      _selectedFamilyMemberName = widget.medicine!.familyMemberName; // NEW
       _scheduledTimes = widget.medicine!.scheduledTimes.map((timeStr) {
         final parts = timeStr.split(':');
         return TimeOfDay(
@@ -658,6 +700,137 @@ class _AddEditMedicineDialogState extends State<AddEditMedicineDialog> {
                       return 'Please enter medicine name';
                     }
                     return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                // NEW: Family Member Selector
+                Consumer<FamilyProvider>(
+                  builder: (context, familyProvider, child) {
+                    final members = familyProvider.familyMembers;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Medicine For:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF009688),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              // Self option
+                              RadioListTile<String?>(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                dense: true,
+                                title: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF009688)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: Color(0xFF009688),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Flexible(
+                                      child: Text(
+                                        'Me (Myself)',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                value: null,
+                                groupValue: _selectedFamilyMemberId,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedFamilyMemberId = null;
+                                    _selectedFamilyMemberName = null;
+                                  });
+                                },
+                                activeColor: const Color(0xFF009688),
+                              ),
+                              const Divider(height: 1),
+                              // Family members
+                              ...members.map((member) {
+                                return RadioListTile<String?>(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  dense: true,
+                                  title: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          FamilyRelationship.getIcon(
+                                              member.relationship),
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              member.name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              member.relationship,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  value: member.id,
+                                  groupValue: _selectedFamilyMemberId,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedFamilyMemberId = member.id;
+                                      _selectedFamilyMemberName = member.name;
+                                    });
+                                  },
+                                  activeColor: Colors.orange,
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
@@ -958,6 +1131,8 @@ class _AddEditMedicineDialogState extends State<AddEditMedicineDialog> {
       final medicine = MedicineModel(
         id: widget.medicine?.id ?? '',
         userId: userId,
+        familyMemberId: _selectedFamilyMemberId, // NEW
+        familyMemberName: _selectedFamilyMemberName, // NEW
         medicineName: _nameController.text,
         dosage: _dosageController.text,
         frequency: _frequency,

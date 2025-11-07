@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class MedicineModel {
   final String id;
   final String userId;
+  final String? familyMemberId; // NEW: Which family member this medicine is for
+  final String? familyMemberName; // NEW: Family member name for quick display
   final String medicineName;
   final String dosage; // e.g., "1 tablet", "2 spoons"
   final String frequency; // daily, weekly, custom, interval
@@ -25,6 +27,8 @@ class MedicineModel {
   MedicineModel({
     required this.id,
     required this.userId,
+    this.familyMemberId, // null = for self
+    this.familyMemberName,
     required this.medicineName,
     required this.dosage,
     required this.frequency,
@@ -89,6 +93,8 @@ class MedicineModel {
   MedicineModel copyWith({
     String? id,
     String? userId,
+    String? familyMemberId,
+    String? familyMemberName,
     String? medicineName,
     String? dosage,
     String? frequency,
@@ -109,6 +115,8 @@ class MedicineModel {
     return MedicineModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      familyMemberId: familyMemberId ?? this.familyMemberId,
+      familyMemberName: familyMemberName ?? this.familyMemberName,
       medicineName: medicineName ?? this.medicineName,
       dosage: dosage ?? this.dosage,
       frequency: frequency ?? this.frequency,
@@ -133,6 +141,8 @@ class MedicineModel {
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
+      'familyMemberId': familyMemberId,
+      'familyMemberName': familyMemberName,
       'medicineName': medicineName,
       'dosage': dosage,
       'frequency': frequency,
@@ -159,6 +169,8 @@ class MedicineModel {
     return MedicineModel(
       id: id,
       userId: map['userId'] ?? '',
+      familyMemberId: map['familyMemberId'],
+      familyMemberName: map['familyMemberName'],
       medicineName: map['medicineName'] ?? '',
       dosage: map['dosage'] ?? '',
       frequency: map['frequency'] ?? 'daily',

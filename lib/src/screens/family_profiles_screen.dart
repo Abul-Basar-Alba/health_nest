@@ -109,30 +109,66 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
               // Statistics Card
               if (!_isSearching) _buildStatisticsCard(provider.statistics),
 
-              // Search Bar
+              // Search Bar with Add Member Button
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search family members...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              _performSearch('', userId);
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search family members...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _performSearch('', userId);
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF009688)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF009688), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                        onChanged: (query) => _performSearch(query, userId),
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                  ),
-                  onChanged: (query) => _performSearch(query, userId),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddEditDialog(context, userId),
+                      icon: const Icon(Icons.person_add, size: 20),
+                      label: const Text('Add Member'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF009688),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -154,12 +190,6 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
             ],
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddEditDialog(context, userId),
-        backgroundColor: const Color(0xFF009688),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Member'),
       ),
     );
   }
@@ -229,52 +259,39 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.people_outline,
-            size: 120,
-            color: Colors.grey[300],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            _isSearching ? 'No family members found' : 'No family members yet',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 120,
+              color: Colors.grey[300],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _isSearching
-                ? 'Try a different search term'
-                : 'Add your first family member',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-          if (!_isSearching) ...[
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _showAddEditDialog(
-                context,
-                FirebaseAuth.instance.currentUser?.uid ?? '',
+            Text(
+              _isSearching
+                  ? 'No family members found'
+                  : 'No family members yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
               ),
-              icon: const Icon(Icons.person_add),
-              label: const Text('Add Family Member'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF009688),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _isSearching
+                  ? 'Try a different search term'
+                  : 'Add your first family member',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -463,13 +480,86 @@ class _AddEditFamilyMemberDialogState extends State<AddEditFamilyMemberDialog> {
   bool _canReceiveNotifications = false;
   bool _isLoading = false;
 
+  // Country code selection
+  String _selectedCountryCode = '+880'; // Default Bangladesh
+
+  // Popular country codes
+  final Map<String, String> _countryCodes = {
+    '+880': '🇧🇩 Bangladesh',
+    '+91': '🇮🇳 India',
+    '+92': '🇵🇰 Pakistan',
+    '+1': '🇺🇸 USA/Canada',
+    '+44': '🇬🇧 UK',
+    '+86': '🇨🇳 China',
+    '+81': '🇯🇵 Japan',
+    '+966': '🇸🇦 Saudi Arabia',
+    '+971': '🇦🇪 UAE',
+    '+60': '🇲🇾 Malaysia',
+    '+65': '🇸🇬 Singapore',
+    '+62': '🇮🇩 Indonesia',
+    '+63': '🇵🇭 Philippines',
+    '+82': '🇰🇷 South Korea',
+    '+66': '🇹🇭 Thailand',
+    '+84': '🇻🇳 Vietnam',
+    '+94': '🇱🇰 Sri Lanka',
+    '+977': '🇳🇵 Nepal',
+    '+93': '🇦🇫 Afghanistan',
+    '+98': '🇮🇷 Iran',
+  };
+
+  // Email validation regex
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  // Phone validation - accepts digits only (no country code needed)
+  bool _isValidPhone(String phone) {
+    // Remove spaces and dashes for validation
+    final cleanPhone = phone.replaceAll(RegExp(r'[\s\-]'), '');
+
+    // Must have 7-15 digits (local number only)
+    return RegExp(r'^\d{7,15}$').hasMatch(cleanPhone);
+  }
+
+  String _formatPhoneForDisplay(String phone) {
+    // Remove spaces and dashes
+    return phone.replaceAll(RegExp(r'[\s\-]'), '');
+  }
+
+  String _getFullPhoneNumber() {
+    if (_phoneController.text.trim().isEmpty) return '';
+    return '$_selectedCountryCode${_formatPhoneForDisplay(_phoneController.text.trim())}';
+  }
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.member?.name ?? '');
     _emailController = TextEditingController(text: widget.member?.email ?? '');
-    _phoneController =
-        TextEditingController(text: widget.member?.phoneNumber ?? '');
+
+    // Parse existing phone number to extract country code
+    if (widget.member?.phoneNumber != null &&
+        widget.member!.phoneNumber!.isNotEmpty) {
+      final phone = widget.member!.phoneNumber!;
+      // Check if phone starts with + (international format)
+      if (phone.startsWith('+')) {
+        // Try to extract country code
+        for (var code in _countryCodes.keys) {
+          if (phone.startsWith(code)) {
+            _selectedCountryCode = code;
+            _phoneController = TextEditingController(
+              text: phone.substring(code.length),
+            );
+            break;
+          }
+        }
+      } else {
+        // No country code found, use as is
+        _phoneController = TextEditingController(text: phone);
+      }
+    } else {
+      _phoneController = TextEditingController();
+    }
 
     if (widget.member != null) {
       _selectedRelationship = widget.member!.relationship;
@@ -534,8 +624,11 @@ class _AddEditFamilyMemberDialogState extends State<AddEditFamilyMemberDialog> {
       name: _nameController.text.trim(),
       relationship: _selectedRelationship,
       dateOfBirth: _dateOfBirth!,
-      email: _emailController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
+      email: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
+      phoneNumber:
+          _phoneController.text.trim().isEmpty ? null : _getFullPhoneNumber(),
       photoUrl: widget.member?.photoUrl ?? '',
       isCaregiver: _isCaregiver,
       canReceiveNotifications: _canReceiveNotifications,
@@ -619,174 +712,324 @@ class _AddEditFamilyMemberDialogState extends State<AddEditFamilyMemberDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-          widget.member == null ? 'Add Family Member' : 'Edit Family Member'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name *',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.80,
+          maxWidth: MediaQuery.of(context).size.width * 0.95,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF009688),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 16),
-
-              // Relationship
-              DropdownButtonFormField<String>(
-                initialValue: _selectedRelationship,
-                decoration: const InputDecoration(
-                  labelText: 'Relationship *',
-                  prefixIcon: Icon(Icons.family_restroom),
-                  border: OutlineInputBorder(),
-                ),
-                items: FamilyRelationship.all.map((relationship) {
-                  return DropdownMenuItem(
-                    value: relationship,
-                    child: Row(
-                      children: [
-                        Text(FamilyRelationship.getIcon(relationship)),
-                        const SizedBox(width: 8),
-                        Text(relationship),
-                      ],
+              child: Row(
+                children: [
+                  const Icon(Icons.person_add, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.member == null
+                          ? 'Add Family Member'
+                          : 'Edit Family Member',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRelationship = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Date of Birth
-              InkWell(
-                onTap: _selectDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Date of Birth *',
-                    prefixIcon: Icon(Icons.cake),
-                    border: OutlineInputBorder(),
                   ),
-                  child: Text(
-                    _dateOfBirth == null
-                        ? 'Select date'
-                        : '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}',
+                ],
+              ),
+            ),
+
+            // Form Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Name *',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter a name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Relationship
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedRelationship,
+                        decoration: const InputDecoration(
+                          labelText: 'Relationship *',
+                          prefixIcon: Icon(Icons.family_restroom),
+                          border: OutlineInputBorder(),
+                        ),
+                        items: FamilyRelationship.all.map((relationship) {
+                          return DropdownMenuItem(
+                            value: relationship,
+                            child: Row(
+                              children: [
+                                Text(FamilyRelationship.getIcon(relationship)),
+                                const SizedBox(width: 8),
+                                Text(relationship),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedRelationship = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Date of Birth
+                      InkWell(
+                        onTap: _selectDate,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Date of Birth *',
+                            prefixIcon: Icon(Icons.cake),
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          child: Text(
+                            _dateOfBirth == null
+                                ? 'Select date'
+                                : '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Email
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email (Optional)',
+                          prefixIcon: Icon(Icons.email),
+                          border: OutlineInputBorder(),
+                          hintText: 'example@email.com',
+                          isDense: true,
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value != null && value.trim().isNotEmpty) {
+                            if (!_isValidEmail(value.trim())) {
+                              return 'Please enter a valid email (e.g., user@gmail.com)';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Phone Number with Country Selector
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Country Code Selector
+                          SizedBox(
+                            width: 140,
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedCountryCode,
+                              decoration: const InputDecoration(
+                                labelText: 'Country',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
+                                ),
+                              ),
+                              isExpanded: true,
+                              items: _countryCodes.entries.map((entry) {
+                                return DropdownMenuItem(
+                                  value: entry.key,
+                                  child: Text(
+                                    entry.key,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCountryCode = value!;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Phone Number Input
+                          Expanded(
+                            child: TextFormField(
+                              controller: _phoneController,
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                prefixIcon: const Icon(Icons.phone),
+                                border: const OutlineInputBorder(),
+                                hintText: '1712345678',
+                                helperText: 'Enter without country code',
+                                helperMaxLines: 1,
+                                suffixText: _phoneController.text.isNotEmpty
+                                    ? _selectedCountryCode
+                                    : null,
+                              ),
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value != null && value.trim().isNotEmpty) {
+                                  if (!_isValidPhone(value.trim())) {
+                                    return 'Enter valid phone (7-15 digits)';
+                                  }
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                setState(() {}); // Rebuild to show suffix
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_phoneController.text.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, left: 4),
+                          child: Text(
+                            'Full number: ${_getFullPhoneNumber()}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+
+                      // Caregiver Switch
+                      SwitchListTile(
+                        title: const Text('Is Caregiver'),
+                        subtitle: const Text(
+                            'Can manage medicines and receive alerts'),
+                        value: _isCaregiver,
+                        activeThumbColor: const Color(0xFF009688),
+                        onChanged: (value) {
+                          setState(() {
+                            _isCaregiver = value;
+                            if (!value) {
+                              _canReceiveNotifications = false;
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+
+                      // Notifications Switch
+                      if (_isCaregiver)
+                        SwitchListTile(
+                          title: const Text('Receive Notifications'),
+                          subtitle:
+                              const Text('Get alerts about missed medicines'),
+                          value: _canReceiveNotifications,
+                          activeThumbColor: const Color(0xFF009688),
+                          onChanged: (value) {
+                            setState(() {
+                              _canReceiveNotifications = value;
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+            ),
 
-              // Email
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email (Optional)',
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
+            // Action Buttons
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 16),
-
-              // Phone Number
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number (Optional)',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (widget.member != null)
+                    TextButton.icon(
+                      onPressed: _isLoading ? null : _deleteMember,
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Delete'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    )
+                  else
+                    const SizedBox(),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _saveMember,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF009688),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(widget.member == null ? 'Add' : 'Save'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // Caregiver Switch
-              SwitchListTile(
-                title: const Text('Is Caregiver'),
-                subtitle: const Text('Can manage medicines and receive alerts'),
-                value: _isCaregiver,
-                activeThumbColor: const Color(0xFF009688),
-                onChanged: (value) {
-                  setState(() {
-                    _isCaregiver = value;
-                    if (!value) {
-                      _canReceiveNotifications = false;
-                    }
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              // Notifications Switch
-              if (_isCaregiver)
-                SwitchListTile(
-                  title: const Text('Receive Notifications'),
-                  subtitle: const Text('Get alerts about missed medicines'),
-                  value: _canReceiveNotifications,
-                  activeThumbColor: const Color(0xFF009688),
-                  onChanged: (value) {
-                    setState(() {
-                      _canReceiveNotifications = value;
-                    });
-                  },
-                  contentPadding: EdgeInsets.zero,
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        if (widget.member != null)
-          TextButton(
-            onPressed: _isLoading ? null : _deleteMember,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _saveMember,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF009688),
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(widget.member == null ? 'Add' : 'Save'),
-        ),
-      ],
     );
   }
 }
