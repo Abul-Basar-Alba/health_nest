@@ -1,9 +1,10 @@
 // lib/src/screens/auth/profile_setup_screen.dart
 
-import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
 import '../../config/auth_colors.dart';
 import '../../services/enhanced_auth_service.dart';
 
@@ -251,11 +252,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Widget _buildGenderPage() {
     return FadeInUp(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AuthConstants.largePadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            const SizedBox(height: 60),
             const Icon(
               Icons.person_outline,
               size: 80,
@@ -279,6 +281,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -331,11 +334,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Widget _buildAgePage() {
     return FadeInUp(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AuthConstants.largePadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            const SizedBox(height: 60),
             const Icon(
               Icons.cake_outlined,
               size: 80,
@@ -389,6 +393,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -397,11 +402,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Widget _buildWeightPage() {
     return FadeInUp(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AuthConstants.largePadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            const SizedBox(height: 60),
             const Icon(
               Icons.monitor_weight_outlined,
               size: 80,
@@ -465,6 +471,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -473,11 +480,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Widget _buildHeightPage() {
     return FadeInUp(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AuthConstants.largePadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            const SizedBox(height: 60),
             const Icon(
               Icons.height_outlined,
               size: 80,
@@ -541,6 +549,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -552,8 +561,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AuthConstants.largePadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            const SizedBox(height: 20),
             const Icon(
               Icons.directions_run,
               size: 60,
@@ -579,6 +589,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: _buildActivityCard(level),
               );
             }),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -905,7 +916,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget _buildNavigationButtons() {
     return FadeInUp(
       child: Padding(
-        padding: const EdgeInsets.all(AuthConstants.largePadding),
+        padding: const EdgeInsets.fromLTRB(
+          AuthConstants.largePadding,
+          AuthConstants.mediumPadding,
+          AuthConstants.largePadding,
+          AuthConstants.largePadding,
+        ),
         child: SizedBox(
           width: double.infinity,
           height: 56,
