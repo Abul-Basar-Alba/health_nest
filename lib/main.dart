@@ -25,6 +25,7 @@ import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
 import 'src/providers/step_provider.dart';
 import 'src/providers/user_provider.dart';
 import 'src/providers/water_reminder_provider.dart';
+import 'src/providers/women_health_provider.dart'; // Women's Health
 import 'src/providers/workout_history_provider.dart';
 import 'src/routes/app_routes.dart';
 import 'src/services/sleep_tracker_service.dart';
@@ -75,6 +76,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DrugInteractionProvider()),
         ChangeNotifierProvider(
             create: (_) => PregnancyProvider()), // Pregnancy Tracker
+        ChangeNotifierProvider(
+            create: (_) => WomenHealthProvider()), // Women's Health Tracker
       ],
       child: MaterialApp(
         title: 'HealthNest',

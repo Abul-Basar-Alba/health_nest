@@ -222,6 +222,29 @@ service cloud.firestore {
       allow delete: if false; // No payment deletion
     }
 
+    // ----------------- Women's Health Data (Highly Private) -----------------
+    match /women_health_settings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /cycle_entries/{entryId} {
+      allow read, write: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /pill_logs/{logId} {
+      allow read, write: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /symptom_logs/{logId} {
+      allow read, write: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     // ----------------- Emergency Access (Temporary) -----------------
     // This rule allows read/write access until December 31, 2025 for development
     // Remove this before production deployment

@@ -11,6 +11,7 @@ import '../screens/health_diary_screen.dart';
 import '../screens/medicine_reminder_screen.dart';
 import '../screens/sleep_tracker_screen.dart';
 import '../screens/water_reminder_screen.dart';
+import '../screens/women_health/women_health_dashboard.dart';
 import '../services/freemium_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -490,6 +491,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Icons.pregnant_woman,
                 const Color(0xFFFFB6C1),
                 () => Navigator.pushNamed(context, AppRoutes.pregnancyTracker),
+              ),
+              _buildActionCard(
+                'Women\'s Health',
+                Icons.favorite_rounded,
+                const Color(0xFFFF6FAF),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WomenHealthDashboard(),
+                  ),
+                ),
               ),
               _buildActionCard(
                 'History',
