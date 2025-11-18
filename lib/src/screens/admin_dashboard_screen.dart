@@ -18,7 +18,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -44,11 +44,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         backgroundColor: Colors.red[50],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
             Tab(icon: Icon(Icons.people), text: 'Users'),
             Tab(icon: Icon(Icons.payment), text: 'Payments'),
             Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
+            Tab(icon: Icon(Icons.message), text: 'Messages'),
           ],
         ),
       ),
@@ -59,6 +61,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           _buildUsersTab(),
           _buildPaymentsTab(),
           _buildAnalyticsTab(),
+          _buildMessagesTab(),
         ],
       ),
     );
@@ -266,8 +269,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 child: Text(
                   'Payment Transactions',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
               PopupMenuButton<String>(
@@ -276,10 +279,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   // Filter logic here
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'all', child: Text('All Transactions')),
-                  const PopupMenuItem(value: 'success', child: Text('Successful Payments')),
-                  const PopupMenuItem(value: 'failed', child: Text('Failed Payments')),
-                  const PopupMenuItem(value: 'trial', child: Text('Free Trials')),
+                  const PopupMenuItem(
+                      value: 'all', child: Text('All Transactions')),
+                  const PopupMenuItem(
+                      value: 'success', child: Text('Successful Payments')),
+                  const PopupMenuItem(
+                      value: 'failed', child: Text('Failed Payments')),
+                  const PopupMenuItem(
+                      value: 'trial', child: Text('Free Trials')),
                 ],
               ),
               const SizedBox(width: 8),
@@ -295,7 +302,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ],
           ),
         ),
-        
+
         // Payment Stats Summary
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -303,63 +310,104 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             stream: _firestore.collection('analytics').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox();
-              
+
               final allEvents = snapshot.data!.docs;
               final successPayments = allEvents.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return data['event'] == 'payment_success';
               }).toList();
-              
+
               final failedPayments = allEvents.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return data['event'] == 'payment_failed';
               }).toList();
-              
+
               final freeTrials = allEvents.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return data['event'] == 'free_trial_started';
               }).toList();
-              
+
               final totalRevenue = successPayments.fold<double>(0, (sum, doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return sum + (data['amount'] ?? 0.0);
               });
-              
+
               return Row(
                 children: [
-                  Expanded(child: _buildPaymentStat('Successful', successPayments.length.toString(), Colors.green)),
-                  Expanded(child: _buildPaymentStat('Failed', failedPayments.length.toString(), Colors.red)),
-                  Expanded(child: _buildPaymentStat('Free Trials', freeTrials.length.toString(), Colors.blue)),
-                  Expanded(child: _buildPaymentStat('Revenue', '৳${totalRevenue.toStringAsFixed(0)}', Colors.purple)),
+                  Expanded(
+                      child: _buildPaymentStat('Successful',
+                          successPayments.length.toString(), Colors.green)),
+                  Expanded(
+                      child: _buildPaymentStat('Failed',
+                          failedPayments.length.toString(), Colors.red)),
+                  Expanded(
+                      child: _buildPaymentStat('Free Trials',
+                          freeTrials.length.toString(), Colors.blue)),
+                  Expanded(
+                      child: _buildPaymentStat(
+                          'Revenue',
+                          '৳${totalRevenue.toStringAsFixed(0)}',
+                          Colors.purple)),
                 ],
               );
             },
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Payment List
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: _firestore
                 .collection('analytics')
-                .where('event', whereIn: ['payment_success', 'payment_failed', 'free_trial_started', 'subscription_activated'])
                 .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 64, color: Colors.red[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error loading payments',
+                        style: TextStyle(fontSize: 18, color: Colors.red[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error.toString(),
+                        style: TextStyle(color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final payments = snapshot.data!.docs;
+              // Filter payment-related events
+              final payments = snapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final event = data['event'] ?? '';
+                return event == 'payment_success' ||
+                    event == 'payment_failed' ||
+                    event == 'free_trial_started' ||
+                    event == 'subscription_activated';
+              }).toList();
 
               if (payments.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.receipt_long, size: 64, color: Colors.grey[400]),
+                      Icon(Icons.receipt_long,
+                          size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       Text(
                         'No transactions found',
@@ -382,7 +430,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 padding: const EdgeInsets.all(16),
                 itemCount: payments.length,
                 itemBuilder: (context, index) {
-                  final paymentData = payments[index].data() as Map<String, dynamic>;
+                  final paymentData =
+                      payments[index].data() as Map<String, dynamic>;
                   return _buildPaymentCard(paymentData);
                 },
               );
@@ -438,12 +487,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ),
         ),
       );
-      
+
       // Simulate data preparation
       await Future.delayed(const Duration(seconds: 2));
-      
+
       Navigator.pop(context); // Close loading dialog
-      
+
       // Show export options
       showDialog(
         context: context,
@@ -494,46 +543,193 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     }
   }
 
-  void _downloadCSV() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('📊 CSV file downloaded successfully!'),
-        backgroundColor: Colors.green[600],
-        action: SnackBarAction(
-          label: 'Open',
-          textColor: Colors.white,
-          onPressed: () {},
+  Future<void> _downloadCSV() async {
+    try {
+      // Fetch payment data
+      final snapshot = await _firestore
+          .collection('analytics')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      final payments = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final event = data['event'] ?? '';
+        return event == 'payment_success' ||
+            event == 'payment_failed' ||
+            event == 'free_trial_started' ||
+            event == 'subscription_activated';
+      }).toList();
+
+      if (payments.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No payment data to export'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Build CSV content
+      final csvContent = StringBuffer();
+      csvContent.writeln(
+          'Date,Event,User ID,Amount,Method,Plan,Transaction ID,Status');
+
+      for (var doc in payments) {
+        final data = doc.data();
+        final timestamp = data['timestamp'] as Timestamp?;
+        final date = timestamp?.toDate().toString().substring(0, 19) ?? 'N/A';
+        final event = data['event'] ?? 'Unknown';
+        final userId = data['userId'] ?? 'N/A';
+        final amount = data['amount']?.toString() ?? '0';
+        final method = data['method'] ?? 'N/A';
+        final plan = data['plan'] ?? 'N/A';
+        final tranId = data['tran_id'] ?? data['tranId'] ?? 'N/A';
+        final status = _getStatusText(event);
+
+        csvContent.writeln(
+            '$date,$event,$userId,$amount,$method,$plan,$tranId,$status');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('📊 CSV ready! (${payments.length} records)'),
+          backgroundColor: Colors.green[600],
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
         ),
-      ),
-    );
+      );
+
+      debugPrint('CSV Export:\n${csvContent.toString()}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[600],
+        ),
+      );
+    }
   }
 
-  void _downloadJSON() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('📄 JSON file downloaded successfully!'),
-        backgroundColor: Colors.blue[600],
-        action: SnackBarAction(
-          label: 'View',
-          textColor: Colors.white,
-          onPressed: () {},
+  Future<void> _downloadJSON() async {
+    try {
+      // Fetch payment data
+      final snapshot = await _firestore
+          .collection('analytics')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      final payments = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final event = data['event'] ?? '';
+        return event == 'payment_success' ||
+            event == 'payment_failed' ||
+            event == 'free_trial_started' ||
+            event == 'subscription_activated';
+      }).toList();
+
+      if (payments.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No payment data to export'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Build JSON array
+      final jsonData = payments.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'event': data['event'],
+          'userId': data['userId'],
+          'amount': data['amount'],
+          'method': data['method'],
+          'plan': data['plan'],
+          'tranId': data['tran_id'] ?? data['tranId'],
+          'timestamp':
+              (data['timestamp'] as Timestamp?)?.toDate().toIso8601String(),
+          'status': _getStatusText(data['event'] ?? ''),
+        };
+      }).toList();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('📄 JSON ready! (${payments.length} records)'),
+          backgroundColor: Colors.blue[600],
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
         ),
-      ),
-    );
+      );
+
+      debugPrint('JSON Export:\n$jsonData');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[600],
+        ),
+      );
+    }
   }
 
-  void _downloadPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('📋 PDF report generated successfully!'),
-        backgroundColor: Colors.purple[600],
-        action: SnackBarAction(
-          label: 'Open',
-          textColor: Colors.white,
-          onPressed: () {},
+  Future<void> _downloadPDF() async {
+    try {
+      // Fetch payment data
+      final snapshot = await _firestore
+          .collection('analytics')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      final payments = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final event = data['event'] ?? '';
+        return event == 'payment_success' ||
+            event == 'payment_failed' ||
+            event == 'free_trial_started' ||
+            event == 'subscription_activated';
+      }).toList();
+
+      if (payments.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No payment data to export'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('📋 PDF ready! (${payments.length} records)'),
+          backgroundColor: Colors.purple[600],
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[600],
+        ),
+      );
+    }
   }
 
   // Analytics Tab - Detailed analytics
@@ -615,7 +811,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         final data = activity.data() as Map<String, dynamic>;
                         final event = data['event'] ?? 'Unknown';
                         final timestamp = data['timestamp'] as Timestamp?;
-                        final timeStr = timestamp?.toDate().toString().substring(0, 19) ?? 'Unknown';
+                        final timeStr =
+                            timestamp?.toDate().toString().substring(0, 19) ??
+                                'Unknown';
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -627,8 +825,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 child: Text(
                                   _getEventDescription(event),
                                   style: const TextStyle(fontSize: 12),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 timeStr.substring(11, 19),
                                 style: TextStyle(
@@ -651,7 +852,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -720,15 +922,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         title: Text(
           name,
           style: const TextStyle(fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(email),
+            Text(
+              email,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+            const SizedBox(height: 4),
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -746,6 +956,68 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ),
           ],
         ),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'details':
+                _viewUserDetails(userId, userData);
+                break;
+              case 'premium':
+                if (!isPremium) _grantPremium(userId);
+                break;
+              case 'message':
+                _messageUser(userId, name);
+                break;
+              case 'community':
+                _viewUserCommunityPosts(userId, name);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'details',
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20),
+                  SizedBox(width: 8),
+                  Text('View Details'),
+                ],
+              ),
+            ),
+            if (!isPremium)
+              const PopupMenuItem(
+                value: 'premium',
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    SizedBox(width: 8),
+                    Text('Grant Premium'),
+                  ],
+                ),
+              ),
+            const PopupMenuItem(
+              value: 'message',
+              child: Row(
+                children: [
+                  Icon(Icons.message_outlined, size: 20),
+                  SizedBox(width: 8),
+                  Text('Send Message'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'community',
+              child: Row(
+                children: [
+                  Icon(Icons.people_outline, size: 20),
+                  SizedBox(width: 8),
+                  Text('Community Posts'),
+                ],
+              ),
+            ),
+          ],
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -754,11 +1026,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               children: [
                 Text('User ID: $userId'),
                 if (joinDate != null)
-                  Text('Joined: ${joinDate.toDate().toString().substring(0, 10)}'),
+                  Text(
+                      'Joined: ${joinDate.toDate().toString().substring(0, 10)}'),
                 if (subscriptionEndDate != null)
-                  Text('Subscription Ends: ${subscriptionEndDate.toDate().toString().substring(0, 10)}'),
+                  Text(
+                      'Subscription Ends: ${subscriptionEndDate.toDate().toString().substring(0, 10)}'),
                 if (freeTrialEndDate != null)
-                  Text('Trial Ends: ${freeTrialEndDate.toDate().toString().substring(0, 10)}'),
+                  Text(
+                      'Trial Ends: ${freeTrialEndDate.toDate().toString().substring(0, 10)}'),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -770,7 +1045,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     if (!isPremium)
                       ElevatedButton(
                         onPressed: () => _grantPremium(userId),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber),
                         child: const Text('Grant Premium'),
                       ),
                   ],
@@ -882,7 +1158,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ),
                         if (tranId != 'N/A') ...[
                           const SizedBox(width: 16),
-                          Icon(Icons.receipt, size: 14, color: Colors.grey[500]),
+                          Icon(Icons.receipt,
+                              size: 14, color: Colors.grey[500]),
                           const SizedBox(width: 4),
                           Text(
                             '#${tranId.length > 8 ? tranId.substring(0, 8) : tranId}',
@@ -921,7 +1198,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ],
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: cardColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -964,7 +1242,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     final date = timestamp.toDate();
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -1020,7 +1298,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               Text('Free Trial: ${userData['isInFreeTrial'] ?? false}'),
               Text('Trial Used: ${userData['hasUsedFreeTrial'] ?? false}'),
               if (userData['age'] != null) Text('Age: ${userData['age']}'),
-              if (userData['gender'] != null) Text('Gender: ${userData['gender']}'),
+              if (userData['gender'] != null)
+                Text('Gender: ${userData['gender']}'),
               // Add more fields as needed
             ],
           ),
@@ -1093,7 +1372,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     final event = paymentData['event'] ?? 'Unknown';
     Color headerColor = Colors.blue;
     IconData headerIcon = Icons.info;
-    
+
     switch (event) {
       case 'payment_success':
         headerColor = Colors.green;
@@ -1164,40 +1443,49 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Details sections
                 _buildDetailSection('Transaction Info', {
                   'Event': event,
-                  'Transaction ID': paymentData['tran_id'] ?? paymentData['tranId'] ?? 'N/A',
+                  'Transaction ID':
+                      paymentData['tran_id'] ?? paymentData['tranId'] ?? 'N/A',
                   'Session Key': paymentData['sessionkey'] ?? 'N/A',
                   'Status': _getStatusText(event),
                 }),
-                
+
                 const SizedBox(height: 12),
                 _buildDetailSection('Payment Info', {
-                  'Amount': paymentData['amount'] != null ? '৳${paymentData['amount']}' : 'N/A',
+                  'Amount': paymentData['amount'] != null
+                      ? '৳${paymentData['amount']}'
+                      : 'N/A',
                   'Method': paymentData['method'] ?? 'N/A',
                   'Plan': paymentData['plan'] ?? 'N/A',
                   'Currency': paymentData['currency'] ?? 'BDT',
                 }),
-                
+
                 const SizedBox(height: 12),
                 _buildDetailSection('User Info', {
                   'User ID': paymentData['userId'] ?? 'N/A',
                   'Customer Email': paymentData['customerEmail'] ?? 'N/A',
                   'Customer Name': paymentData['customerName'] ?? 'N/A',
                 }),
-                
+
                 const SizedBox(height: 12),
                 _buildDetailSection('Timestamps', {
-                  'Transaction Date': paymentData['timestamp'] != null 
-                      ? (paymentData['timestamp'] as Timestamp).toDate().toString().substring(0, 19)
+                  'Transaction Date': paymentData['timestamp'] != null
+                      ? (paymentData['timestamp'] as Timestamp)
+                          .toDate()
+                          .toString()
+                          .substring(0, 19)
                       : 'N/A',
                   'Trial End Date': paymentData['trialEndDate'] != null
-                      ? (paymentData['trialEndDate'] as Timestamp).toDate().toString().substring(0, 19)
+                      ? (paymentData['trialEndDate'] as Timestamp)
+                          .toDate()
+                          .toString()
+                          .substring(0, 19)
                       : 'N/A',
                 }),
-                
+
                 if (paymentData['gateway_url'] != null) ...[
                   const SizedBox(height: 12),
                   _buildDetailSection('Gateway Info', {
@@ -1264,32 +1552,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ),
             const SizedBox(height: 8),
             ...details.entries.map((entry) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      '${entry.key}:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          '${entry.key}:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      entry.value,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            )),
+                )),
           ],
         ),
       ),
@@ -1300,7 +1588,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     final tranId = paymentData['tran_id'] ?? paymentData['tranId'] ?? 'N/A';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('📧 Receipt sent for transaction #${tranId.length > 8 ? tranId.substring(0, 8) : tranId}'),
+        content: Text(
+            '📧 Receipt sent for transaction #${tranId.length > 8 ? tranId.substring(0, 8) : tranId}'),
         backgroundColor: Colors.green[600],
         action: SnackBarAction(
           label: 'View',
@@ -1315,7 +1604,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return 'Unknown';
-    
+
     try {
       DateTime date;
       if (timestamp is Timestamp) {
@@ -1327,10 +1616,255 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       } else {
         return 'Invalid date';
       }
-      
+
       return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return 'Invalid date';
     }
+  }
+
+  // Messages Tab - Admin inbox for user messages
+  Widget _buildMessagesTab() {
+    const String adminId = 'SZQYWWWw28fza8MiWYep8snmcox1';
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('adminChats').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading messages',
+                  style: TextStyle(fontSize: 18, color: Colors.red[600]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final chatRooms = snapshot.data!.docs;
+
+        if (chatRooms.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox, size: 80, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No Messages Yet',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'User messages will appear here',
+                  style: TextStyle(color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: chatRooms.length,
+          itemBuilder: (context, index) {
+            final chatRoomId = chatRooms[index].id;
+
+            // Extract user ID from chatRoomId (format: userId_adminId or adminId_userId)
+            final parts = chatRoomId.split('_');
+            final userId = parts[0] == adminId ? parts[1] : parts[0];
+
+            return _buildMessagePreviewCard(userId, chatRoomId);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMessagePreviewCard(String userId, String chatRoomId) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _firestore.collection('users').doc(userId).get(),
+      builder: (context, userSnapshot) {
+        if (!userSnapshot.hasData) {
+          return const Card(
+            child: ListTile(
+              leading: CircularProgressIndicator(),
+              title: Text('Loading...'),
+            ),
+          );
+        }
+
+        final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+        final userName = userData?['name'] ?? 'Unknown User';
+        final userEmail = userData?['email'] ?? '';
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('adminChats')
+              .doc(chatRoomId)
+              .collection('messages')
+              .orderBy('timestamp', descending: true)
+              .limit(1)
+              .snapshots(),
+          builder: (context, messageSnapshot) {
+            String lastMessage = 'No messages yet';
+            String timeAgo = '';
+            bool hasUnread = false;
+
+            if (messageSnapshot.hasData &&
+                messageSnapshot.data!.docs.isNotEmpty) {
+              final lastMsg = messageSnapshot.data!.docs.first.data()
+                  as Map<String, dynamic>;
+              lastMessage = lastMsg['text'] ?? 'No text';
+              final timestamp = lastMsg['timestamp'] as Timestamp?;
+              if (timestamp != null) {
+                timeAgo = _formatTime(timestamp);
+              }
+
+              // Check if message is from user (not admin)
+              const String adminId = 'SZQYWWWw28fza8MiWYep8snmcox1';
+              hasUnread = lastMsg['senderId'] != adminId;
+            }
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: hasUnread ? 4 : 2,
+              child: ListTile(
+                leading: Stack(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.blue[100],
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                title: Text(
+                  userName,
+                  style: TextStyle(
+                    fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      userEmail,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      lastMessage,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight:
+                            hasUnread ? FontWeight.w600 : FontWeight.normal,
+                        color: hasUnread ? Colors.black87 : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (timeAgo.isNotEmpty)
+                      Text(
+                        timeAgo,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: hasUnread ? Colors.blue : Colors.grey[500],
+                          fontWeight:
+                              hasUnread ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    if (hasUnread) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'NEW',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                onTap: () => _messageUser(userId, userName),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _messageUser(String userId, String userName) {
+    Navigator.pushNamed(
+      context,
+      '/admin-chat',
+      arguments: {
+        'recipientId': userId,
+        'recipientName': userName,
+      },
+    );
+  }
+
+  void _viewUserCommunityPosts(String userId, String userName) {
+    Navigator.pushNamed(
+      context,
+      '/community',
+      arguments: {
+        'filterByUserId': userId,
+        'userName': userName,
+      },
+    );
   }
 }
