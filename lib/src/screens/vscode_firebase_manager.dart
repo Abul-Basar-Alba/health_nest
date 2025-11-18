@@ -300,6 +300,8 @@ class _VSCodeFirebaseManagerState extends State<VSCodeFirebaseManager>
                           fontWeight: FontWeight.bold,
                           color: Colors.blue.shade800,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                       if (_consoleData['lastSync'] != null)
                         Text(
@@ -308,6 +310,8 @@ class _VSCodeFirebaseManagerState extends State<VSCodeFirebaseManager>
                             fontSize: 12,
                             color: Colors.blue.shade600,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                     ],
                   ),
@@ -467,9 +471,21 @@ class _VSCodeFirebaseManagerState extends State<VSCodeFirebaseManager>
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Text('Last Updated: ${data['lastUpdated'] ?? 'N/A'}'),
-                      Text('Updated By: ${data['updatedBy'] ?? 'N/A'}'),
-                      Text('Source: ${data['source'] ?? 'N/A'}'),
+                      Text(
+                        'Last Updated: ${data['lastUpdated'] ?? 'N/A'}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Updated By: ${data['updatedBy'] ?? 'N/A'}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Source: ${data['source'] ?? 'N/A'}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ],
                   ),
                 ),

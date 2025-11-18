@@ -531,6 +531,11 @@ class MainNavigationState extends State<MainNavigation> {
             onTap: () => _navigateToScreen(const ChatListScreen()),
           ),
           _buildDrawerItem(
+            icon: Icons.people,
+            title: 'Community Members',
+            onTap: () => _navigateToDrawerScreen('/community-users'),
+          ),
+          _buildDrawerItem(
             icon: Icons.directions_walk,
             title: 'Step Counter',
             onTap: () => _navigateToScreen(const StepCounterDashboardScreen()),

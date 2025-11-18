@@ -1035,20 +1035,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Text(
                       'Trial Ends: ${freeTrialEndDate.toDate().toString().substring(0, 10)}'),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     ElevatedButton(
                       onPressed: () => _viewUserDetails(userId, userData),
-                      child: const Text('View Details'),
+                      child: const Text('View Details',
+                          overflow: TextOverflow.ellipsis),
                     ),
-                    const SizedBox(width: 8),
                     if (!isPremium)
                       ElevatedButton(
                         onPressed: () => _grantPremium(userId),
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.amber),
-                        child: const Text('Grant Premium'),
+                        child: const Text('Grant Premium',
+                            overflow: TextOverflow.ellipsis),
                       ),
+                    ElevatedButton.icon(
+                      onPressed: () => _messageUser(userId, name),
+                      icon: const Icon(Icons.message, size: 16),
+                      label: const Text('Message',
+                          overflow: TextOverflow.ellipsis),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                      ),
+                    ),
                   ],
                 ),
               ],

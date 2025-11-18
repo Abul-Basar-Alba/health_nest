@@ -3,6 +3,7 @@ import 'package:health_nest/src/models/user_model.dart'; // Import UserModel
 import 'package:health_nest/src/screens/dashboard_screen.dart';
 import 'package:health_nest/src/widgets/main_navigation.dart';
 
+import '../screens/admin_chat_screen.dart';
 import '../screens/admin_contact_screen.dart';
 import '../screens/admin_dashboard_screen.dart'; // New: Admin Dashboard
 import '../screens/auth/modern_login_screen.dart';
@@ -14,6 +15,7 @@ import '../screens/calculator_screen.dart';
 import '../screens/calculators/premium_bmi_calculator_screen.dart';
 import '../screens/community/premium_community_screen.dart';
 import '../screens/community_screen.dart';
+import '../screens/community_users_screen.dart';
 import '../screens/documentation_screen.dart';
 import '../screens/exercise_screen.dart';
 import '../screens/history/history_screen.dart'; // Updated import path
@@ -99,6 +101,8 @@ class AppRoutes {
   static const String chatList = '/chat-list';
   static const String chat = '/chat';
   static const String profileView = '/profile-view';
+  static const String communityUsers = '/community-users';
+  static const String adminChat = '/admin-chat';
 
   static Map<String, WidgetBuilder> get routes {
     return {
@@ -150,6 +154,7 @@ class AppRoutes {
       postpartumTracker: (context) =>
           const PostpartumTrackerScreen(), // Pregnancy Tracker
       chatList: (context) => const ChatListScreen(),
+      communityUsers: (context) => const CommunityUsersScreen(),
       adminDashboard: (context) =>
           const AdminDashboardScreen(), // New: Admin Dashboard
       vscodeFirebaseManager: (context) => const VSCodeFirebaseManager(),
@@ -192,6 +197,21 @@ class AppRoutes {
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(
           builder: (_) => ProfileViewScreen(user: user),
+        );
+      case adminChat:
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null || !args.containsKey('recipientId')) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('Error: Missing recipient information')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => AdminChatScreen(
+            recipientId: args['recipientId'] as String,
+            recipientName: args['recipientName'] as String? ?? 'User',
+          ),
         );
       default:
         // Return null for routes defined in the 'routes' map
