@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 
@@ -83,5 +84,125 @@ class ChatProvider extends ChangeNotifier {
     _currentMessages = [];
     _currentChatId = null;
     notifyListeners();
+  }
+
+  // Delete a specific message
+  Future<void> deleteMessage(String chatId, String messageId) async {
+    try {
+      await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId)
+          .delete();
+      
+      // Update last message if deleted message was the last one
+      final messagesSnapshot = await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+      
+      if (messagesSnapshot.docs.isNotEmpty) {
+        final lastMsg = messagesSnapshot.docs.first;
+        await _firestore.collection('chats').doc(chatId).update({
+          'lastMessage': lastMsg['content'],
+          'lastMessageTimestamp': lastMsg['timestamp'],
+        });
+      } else {
+        await _firestore.collection('chats').doc(chatId).update({
+          'lastMessage': '',
+          'lastMessageTimestamp': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting message: $e');
+      }
+    }
+  }
+
+  // Edit a specific message
+  Future<void> editMessage(String chatId, String messageId, String newContent) async {
+    try {
+      await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId)
+          .update({
+        'content': newContent,
+        'edited': true,
+        'editedAt': DateTime.now(),
+      });
+
+      // Update last message if edited message was the last one
+      final messagesSnapshot = await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+      
+      if (messagesSnapshot.docs.isNotEmpty && messagesSnapshot.docs.first.id == messageId) {
+        await _firestore.collection('chats').doc(chatId).update({
+          'lastMessage': newContent,
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error editing message: $e');
+      }
+    }
+  }
+
+  // Clear all messages in a chat
+  Future<void> clearAllMessages(String chatId) async {
+    try {
+      final messagesSnapshot = await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .get();
+      
+      for (var doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      await _firestore.collection('chats').doc(chatId).update({
+        'lastMessage': '',
+        'lastMessageTimestamp': DateTime.now(),
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clearing messages: $e');
+      }
+    }
+  }
+
+  // Delete entire chat conversation
+  Future<void> deleteChat(String chatId) async {
+    try {
+      // Delete all messages first
+      final messagesSnapshot = await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .get();
+      
+      for (var doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete the chat document
+      await _firestore.collection('chats').doc(chatId).delete();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting chat: $e');
+      }
+    }
   }
 }

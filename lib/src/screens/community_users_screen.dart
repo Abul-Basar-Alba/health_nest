@@ -4,8 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/chat_provider.dart';
 import '../providers/user_provider.dart';
-import 'admin_chat_screen.dart';
+import 'messaging/chat_screen.dart';
 
 class CommunityUsersScreen extends StatefulWidget {
   const CommunityUsersScreen({super.key});
@@ -247,12 +248,16 @@ class _CommunityUsersScreenState extends State<CommunityUsersScreen> {
                     icon: const Icon(Icons.message),
                     color: Colors.teal,
                     onPressed: () {
+                      final chatProvider =
+                          Provider.of<ChatProvider>(context, listen: false);
+                      final chatId =
+                          chatProvider.getChatId(currentUser.id, userId);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminChatScreen(
-                            recipientId: userId,
-                            recipientName: userName,
+                          builder: (context) => ChatScreen(
+                            chatId: chatId,
+                            otherUserId: userId,
                           ),
                         ),
                       );
@@ -374,16 +379,24 @@ class _CommunityUsersScreenState extends State<CommunityUsersScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AdminChatScreen(
-                        recipientId: userId,
-                        recipientName: userName,
+                  final chatProvider =
+                      Provider.of<ChatProvider>(context, listen: false);
+                  final currentUser =
+                      Provider.of<UserProvider>(context, listen: false).user;
+                  if (currentUser != null) {
+                    final chatId =
+                        chatProvider.getChatId(currentUser.id, userId);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          chatId: chatId,
+                          otherUserId: userId,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
                 icon: const Icon(Icons.message),
                 label: const Text('Start Conversation'),

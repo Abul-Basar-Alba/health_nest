@@ -7,6 +7,8 @@ class MessageModel {
   final String content;
   final DateTime timestamp;
   final bool isRead;
+  final bool? edited;
+  final DateTime? editedAt;
 
   MessageModel({
     required this.id,
@@ -15,6 +17,8 @@ class MessageModel {
     required this.content,
     required this.timestamp,
     this.isRead = false,
+    this.edited,
+    this.editedAt,
   });
 
   // Factory constructor to create a MessageModel from a Firestore document.
@@ -27,6 +31,10 @@ class MessageModel {
       content: data['content'] ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
       isRead: data['isRead'] ?? false,
+      edited: data['edited'] as bool?,
+      editedAt: data['editedAt'] != null
+          ? (data['editedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -38,6 +46,8 @@ class MessageModel {
       'content': content,
       'timestamp': timestamp,
       'isRead': isRead,
+      if (edited != null) 'edited': edited,
+      if (editedAt != null) 'editedAt': editedAt,
     };
   }
 }
