@@ -429,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 'Step Counter',
                 Icons.directions_walk,
                 const Color(0xFF00CED1),
-                () => Navigator.pushNamed(context, AppRoutes.stepCounter),
+                () => Navigator.pushNamed(context, AppRoutes.aiChatbot),
               ),
               _buildActionCard(
                 'Sleep',

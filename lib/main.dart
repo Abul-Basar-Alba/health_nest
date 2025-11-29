@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'firebase_options.dart';
+import 'src/providers/ai_chatbot_provider.dart'; // AI Chatbot
 import 'src/providers/auth_provider.dart';
 import 'src/providers/chat_provider.dart';
 import 'src/providers/community_provider.dart';
@@ -60,6 +61,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
         ChangeNotifierProvider(create: (_) => StepProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(
+            create: (_) => AIChatbotProvider()), // AI Chatbot
         ChangeNotifierProvider(create: (_) => RecommendationProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),

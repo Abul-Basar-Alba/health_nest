@@ -469,12 +469,13 @@ class MainNavigationState extends State<MainNavigation> {
         _DraggableFAB(
           key: _fabKey,
           onPressed: () {
-            _navigateToScreen(const StepCounterDashboardScreen());
+            Navigator.of(context).pop(); // Close drawer if open
+            Navigator.of(context).pushNamed('/ai-chatbot');
           },
           backgroundColor: Colors.green.shade600,
           foregroundColor: Colors.white,
-          tooltip: 'Step Counter',
-          child: const Icon(Icons.directions_walk),
+          tooltip: 'AI Chatbot',
+          child: const Icon(Icons.psychology_rounded),
         ),
       ],
     );

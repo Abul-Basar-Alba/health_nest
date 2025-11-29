@@ -6,6 +6,7 @@ import 'package:health_nest/src/widgets/main_navigation.dart';
 import '../screens/admin_chat_screen.dart';
 import '../screens/admin_contact_screen.dart';
 import '../screens/admin_dashboard_screen.dart'; // New: Admin Dashboard
+import '../screens/ai_chatbot_web_style_screen.dart'; // AI Chatbot Web Style
 import '../screens/auth/modern_login_screen.dart';
 import '../screens/auth/modern_signup_screen.dart';
 import '../screens/auth/profile_setup_screen.dart';
@@ -68,6 +69,7 @@ class AppRoutes {
   static const String calculator = '/calculator';
   static const String premiumBMICalculator = '/premium-bmi-calculator';
   static const String recommendations = '/recommendations';
+  static const String aiChatbot = '/ai-chatbot'; // AI Chatbot (Flask)
   static const String adminContact = '/admin-contact';
   static const String vscodeFirebaseManager = '/vscode-firebase-manager';
   static const String profile = '/profile';
@@ -124,6 +126,8 @@ class AppRoutes {
       calculator: (context) => const CalculatorScreen(),
       premiumBMICalculator: (context) => const PremiumBMICalculatorScreen(),
       recommendations: (context) => const RecommendationScreen(),
+      aiChatbot: (context) =>
+          const AIChatbotWebStyleScreen(), // AI Chatbot - Web Frontend Style
       adminContact: (context) => const AdminContactScreen(),
       profile: (context) => const ProfileScreen(),
       editProfile: (context) => const EditProfileScreen(),
