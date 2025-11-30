@@ -32,6 +32,9 @@ jobs:
 
       - name: Build web
         run: flutter build web --release --base-href "/health_nest/"
+      
+      - name: Add .nojekyll file
+        run: touch build/web/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
