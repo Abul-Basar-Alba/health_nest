@@ -1,57 +1,63 @@
 // lib/src/services/storage_service.dart
 
-import 'dart:io';
-
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
 
+import 'supabase_storage_service.dart';
+
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final _supabaseStorage = SupabaseStorageService();
 
-  // Upload bump photo to Firebase Storage
+  // Upload bump photo to Supabase Storage (NEW - using Supabase)
   Future<String> uploadBumpPhoto(
-    File imageFile,
+    dynamic imageFile, // XFile or File
     String userId,
     String pregnancyId,
     int week,
   ) async {
     try {
-      // Create unique filename
-      final fileName =
-          'bump_week_${week}_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
+      // Use Supabase for bump photos
+      final url = await _supabaseStorage.uploadBumpPhoto(
+        imageFile: imageFile,
+        userId: userId,
+        pregnancyId: pregnancyId,
+        week: week,
+      );
 
-      // Create storage path
-      final storageRef = _storage.ref().child(
-            'pregnancies/$userId/$pregnancyId/bump_photos/$fileName',
-          );
+      if (url == null) {
+        throw Exception('Failed to upload bump photo to Supabase');
+      }
 
-      // Upload file
-      final uploadTask = storageRef.putFile(imageFile);
-
-      // Wait for upload to complete
-      final snapshot = await uploadTask.whenComplete(() {});
-
-      // Get download URL
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      return downloadUrl;
+      return url;
     } catch (e) {
+      print('❌ Bump photo upload failed: $e');
       throw Exception('Failed to upload photo: $e');
     }
   }
 
-  // Delete bump photo from Firebase Storage
+  // Delete bump photo from Supabase Storage (NEW - using Supabase)
   Future<void> deleteBumpPhoto(String photoUrl) async {
     try {
-      final ref = _storage.refFromURL(photoUrl);
-      await ref.delete();
+      await _supabaseStorage.deleteBumpPhoto(photoUrl);
     } catch (e) {
+      print('❌ Failed to delete bump photo: $e');
       // Silently fail if photo doesn't exist
     }
   }
 
-  // Upload profile photo
-  Future<String> uploadProfilePhoto(File imageFile, String userId) async {
+  // Get all photos for a pregnancy (NEW - using Supabase)
+  Future<List<String>> getBumpPhotos(String userId, String pregnancyId) async {
+    try {
+      return await _supabaseStorage.getBumpPhotos(userId, pregnancyId);
+    } catch (e) {
+      print('❌ Failed to get bump photos: $e');
+      return [];
+    }
+  }
+
+  // Upload profile photo (keeping Firebase for now)
+  Future<String> uploadProfilePhoto(dynamic imageFile, String userId) async {
     try {
       final fileName =
           'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
@@ -64,25 +70,6 @@ class StorageService {
       return downloadUrl;
     } catch (e) {
       throw Exception('Failed to upload profile photo: $e');
-    }
-  }
-
-  // Get all photos for a pregnancy
-  Future<List<String>> getBumpPhotos(String userId, String pregnancyId) async {
-    try {
-      final storageRef = _storage.ref().child(
-            'pregnancies/$userId/$pregnancyId/bump_photos',
-          );
-
-      final result = await storageRef.listAll();
-
-      final urls = await Future.wait(
-        result.items.map((item) => item.getDownloadURL()),
-      );
-
-      return urls;
-    } catch (e) {
-      return [];
     }
   }
 }

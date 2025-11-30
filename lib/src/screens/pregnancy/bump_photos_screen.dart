@@ -21,7 +21,10 @@ class _BumpPhotosScreenState extends State<BumpPhotosScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPhotos();
+    // Fix: Load photos after build completes to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPhotos();
+    });
   }
 
   Future<void> _loadPhotos() async {
@@ -295,9 +298,13 @@ class _BumpPhotosScreenState extends State<BumpPhotosScreen> {
                       createdAt: DateTime.now(),
                     );
 
+                    // Close dialog first
+                    Navigator.pop(context);
+
                     // Upload photo
                     await provider.addBumpPhoto(imageFile, photo);
 
+                    // Show success message
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

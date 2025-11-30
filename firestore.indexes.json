@@ -87,6 +87,66 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "bump_photos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pregnancyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "week",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "symptom_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pregnancyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "logDate",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "kick_counts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pregnancyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contractions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pregnancyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

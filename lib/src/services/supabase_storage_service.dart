@@ -12,6 +12,7 @@ class SupabaseStorageService {
 
   SupabaseClient? _supabase;
   static const String profileBucket = 'Profile';
+  static const String bumpPhotoBucket = 'Bump_Photo';
   bool _isInitialized = false;
 
   // Initialize Supabase
@@ -242,6 +243,138 @@ class SupabaseStorageService {
       print('✅ Cleaned up ${imagesToDelete.length} old profile images');
     } catch (e) {
       print('❌ Error cleaning up old images: $e');
+    }
+  }
+
+  // ===== BUMP PHOTO UPLOADS =====
+
+  /// Upload bump photo to Supabase Storage
+  Future<String?> uploadBumpPhoto({
+    required dynamic imageFile, // XFile or File
+    required String userId,
+    required String pregnancyId,
+    required int week,
+  }) async {
+    try {
+      if (_supabase == null || !_isInitialized) {
+        print('❌ Supabase not initialized for bump photo');
+        throw Exception('Supabase not initialized');
+      }
+
+      // Generate unique filename with timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      String extension = '';
+
+      // Get extension from path
+      if (imageFile is XFile) {
+        extension = path.extension(imageFile.path);
+      } else if (imageFile.path != null) {
+        extension = path.extension(imageFile.path);
+      }
+
+      final fileName = 'bump_week_${week}_${userId}_$timestamp$extension';
+      final filePath = 'pregnancies/$userId/$pregnancyId/$fileName';
+
+      print('📤 Uploading bump photo: $filePath');
+
+      // Read file bytes
+      final bytes = await imageFile.readAsBytes();
+      print('📦 Bump photo size: ${bytes.length} bytes');
+
+      // Determine content type
+      String contentType = 'image/jpeg';
+      if (extension.toLowerCase() == '.png') {
+        contentType = 'image/png';
+      } else if (extension.toLowerCase() == '.jpg' ||
+          extension.toLowerCase() == '.jpeg') {
+        contentType = 'image/jpeg';
+      } else if (extension.toLowerCase() == '.webp') {
+        contentType = 'image/webp';
+      }
+
+      // Upload to Supabase Storage
+      await _supabase!.storage.from(bumpPhotoBucket).uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+              contentType: contentType,
+            ),
+          );
+
+      // Get public URL
+      final publicUrl =
+          _supabase!.storage.from(bumpPhotoBucket).getPublicUrl(filePath);
+
+      print('✅ Bump photo uploaded: $publicUrl');
+      return publicUrl;
+    } catch (e, stackTrace) {
+      print('❌ Error uploading bump photo: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Delete bump photo from Supabase Storage
+  Future<bool> deleteBumpPhoto(String imageUrl) async {
+    try {
+      if (_supabase == null || !_isInitialized) {
+        print('❌ Supabase not initialized');
+        return false;
+      }
+
+      // Extract file path from URL
+      final uri = Uri.parse(imageUrl);
+      final pathSegments = uri.pathSegments;
+
+      // Find bucket index and get path after it
+      final bucketIndex = pathSegments.indexOf(bumpPhotoBucket);
+      if (bucketIndex == -1) {
+        print('⚠️ Invalid bump photo URL: $imageUrl');
+        return false;
+      }
+
+      final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+
+      print('🗑️ Deleting bump photo: $filePath');
+
+      // Delete from Supabase Storage
+      await _supabase!.storage.from(bumpPhotoBucket).remove([filePath]);
+
+      print('✅ Bump photo deleted');
+      return true;
+    } catch (e, stackTrace) {
+      print('❌ Error deleting bump photo: $e');
+      print('Stack trace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Get all bump photos for a pregnancy
+  Future<List<String>> getBumpPhotos(String userId, String pregnancyId) async {
+    try {
+      if (_supabase == null || !_isInitialized) {
+        print('❌ Supabase not initialized');
+        return [];
+      }
+
+      // List all files in the pregnancy folder
+      final files = await _supabase!.storage
+          .from(bumpPhotoBucket)
+          .list(path: 'pregnancies/$userId/$pregnancyId');
+
+      // Get public URLs for all files
+      final urls = files.map((file) {
+        return _supabase!.storage
+            .from(bumpPhotoBucket)
+            .getPublicUrl('pregnancies/$userId/$pregnancyId/${file.name}');
+      }).toList();
+
+      return urls;
+    } catch (e) {
+      print('❌ Error getting bump photos: $e');
+      return [];
     }
   }
 }
