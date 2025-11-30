@@ -741,16 +741,31 @@ class PregnancyProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Delete from Firebase Storage
-      await StorageService().deleteBumpPhoto(photo.photoUrl);
+      print('🗑️ Deleting bump photo - ID: ${photo.id}');
 
-      // Delete from Firestore
+      // Delete from Firestore first (metadata)
       await _service.deleteBumpPhoto(photo.id);
+      print('✅ Deleted from Firestore');
+
+      // Delete from Supabase Storage
+      await StorageService().deleteBumpPhoto(photo.photoUrl);
+      print('✅ Deleted from Storage');
 
       // Remove from local list
       _bumpPhotos.removeWhere((p) => p.id == photo.id);
+      print('✅ Removed from local list - Remaining: ${_bumpPhotos.length}');
+
+      // Reload photos to ensure sync
+      if (_activePregnancy != null) {
+        final userId = _activePregnancy!.userId;
+        final pregnancyId = _activePregnancy!.id;
+        await loadBumpPhotos(userId, pregnancyId);
+        print('✅ Photos reloaded');
+      }
     } catch (e) {
       _error = 'Failed to delete bump photo: $e';
+      print('❌ Error deleting bump photo: $e');
+      rethrow; // Re-throw to show error in UI
     } finally {
       _isLoading = false;
       notifyListeners();

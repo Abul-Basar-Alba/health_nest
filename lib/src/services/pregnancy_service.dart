@@ -581,8 +581,15 @@ class PregnancyService {
   // Add bump photo
   Future<String> addBumpPhoto(BumpPhotoModel photo) async {
     try {
-      final docRef =
-          await _firestore.collection(_bumpPhotosCollection).add(photo.toMap());
+      // Generate a unique ID
+      final docRef = _firestore.collection(_bumpPhotosCollection).doc();
+
+      // Update photo with the generated ID
+      final photoWithId = photo.copyWith(id: docRef.id);
+
+      // Save to Firestore
+      await docRef.set(photoWithId.toMap());
+
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to add bump photo: $e');
@@ -614,9 +621,11 @@ class PregnancyService {
           .orderBy('week', descending: false)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => BumpPhotoModel.fromMap(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id; // Include document ID
+        return BumpPhotoModel.fromMap(data);
+      }).toList();
     } catch (e) {
       throw Exception('Failed to get bump photos: $e');
     }
@@ -639,7 +648,10 @@ class PregnancyService {
 
       if (querySnapshot.docs.isEmpty) return null;
 
-      return BumpPhotoModel.fromMap(querySnapshot.docs.first.data());
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      data['id'] = doc.id; // Include document ID
+      return BumpPhotoModel.fromMap(data);
     } catch (e) {
       throw Exception('Failed to get bump photo: $e');
     }
@@ -665,9 +677,11 @@ class PregnancyService {
         .where('pregnancyId', isEqualTo: pregnancyId)
         .orderBy('week', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => BumpPhotoModel.fromMap(doc.data()))
-            .toList());
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id; // Include document ID
+              return BumpPhotoModel.fromMap(data);
+            }).toList());
   }
 
   // Get photo comparison (current week vs previous weeks)

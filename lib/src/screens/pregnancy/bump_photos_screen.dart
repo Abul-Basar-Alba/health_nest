@@ -515,19 +515,35 @@ class _BumpPhotosScreenState extends State<BumpPhotosScreen> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await provider.deleteBumpPhoto(photo);
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        provider.isBangla
-                            ? 'ফটো মুছে ফেলা হয়েছে'
-                            : 'Photo deleted',
+                try {
+                  await provider.deleteBumpPhoto(photo);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          provider.isBangla
+                              ? 'ফটো সফলভাবে মুছে ফেলা হয়েছে'
+                              : 'Photo deleted successfully',
+                        ),
+                        backgroundColor: Colors.green,
                       ),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          provider.isBangla
+                              ? 'ফটো মুছতে সমস্যা হয়েছে: $e'
+                              : 'Failed to delete photo: $e',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
