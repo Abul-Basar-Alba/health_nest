@@ -609,7 +609,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'Get assistance and FAQs',
             color: Colors.indigo,
             onTap: () {
-              // Navigate to help screen
+              Navigator.pushNamed(context, '/help-support');
             },
           ),
           _buildDivider(),

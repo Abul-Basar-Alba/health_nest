@@ -19,6 +19,7 @@ import '../screens/community_screen.dart';
 import '../screens/community_users_screen.dart';
 import '../screens/documentation_screen.dart';
 import '../screens/exercise_screen.dart';
+import '../screens/help_support_screen.dart'; // Help & Support Screen
 import '../screens/history/history_screen.dart'; // Updated import path
 // Core Screens
 import '../screens/home_screen.dart';
@@ -38,6 +39,7 @@ import '../screens/pregnancy/pregnancy_report_screen.dart'; // Pregnancy Tracker
 import '../screens/pregnancy/pregnancy_tracker_screen.dart'; // Pregnancy Tracker
 import '../screens/pregnancy/week_details_screen.dart'; // Pregnancy Tracker
 import '../screens/premium_services_screen.dart'; // New: Import PremiumServicesScreen
+import '../screens/privacy_policy_screen.dart'; // Privacy Policy Screen
 import '../screens/profile/change_password_screen.dart';
 // Profile Screens
 import '../screens/profile/edit_profile_screen.dart';
@@ -47,7 +49,9 @@ import '../screens/recommendation_screen.dart';
 import '../screens/settings/account_settings_screen.dart'; // Settings Screens
 import '../screens/settings/privacy_settings_screen.dart'; // Settings Screens
 import '../screens/settings/voice_settings_screen.dart'; // Settings Screens
+import '../screens/settings_screen.dart'; // Settings Screen
 import '../screens/step_counter_dashboard_screen.dart'; // Step Counter (New)
+import '../screens/terms_of_service_screen.dart'; // Terms of Service Screen
 import '../screens/vscode_firebase_manager.dart';
 
 class AppRoutes {
@@ -88,6 +92,13 @@ class AppRoutes {
       '/progress-tracker'; // New: Progress tracker route
   static const String adminDashboard =
       '/admin-dashboard'; // Admin Dashboard route
+  static const String settings = '/settings'; // Settings screen route
+  static const String helpSupport =
+      '/help-support'; // Help & Support screen route
+  static const String privacyPolicy =
+      '/privacy-policy'; // Privacy Policy screen route
+  static const String termsOfService =
+      '/terms-of-service'; // Terms of Service screen route
 
   // Pregnancy Tracker routes
   static const String pregnancyTracker = '/pregnancy-tracker';
@@ -161,6 +172,13 @@ class AppRoutes {
       communityUsers: (context) => const CommunityUsersScreen(),
       adminDashboard: (context) =>
           const AdminDashboardScreen(), // New: Admin Dashboard
+      settings: (context) => const SettingsScreen(), // Settings screen
+      helpSupport: (context) =>
+          const HelpSupportScreen(), // Help & Support screen
+      privacyPolicy: (context) =>
+          const PrivacyPolicyScreen(), // Privacy Policy screen
+      termsOfService: (context) =>
+          const TermsOfServiceScreen(), // Terms of Service screen
       vscodeFirebaseManager: (context) => const VSCodeFirebaseManager(),
     };
   }
@@ -178,9 +196,7 @@ class AppRoutes {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => ProfileSetupScreen(
-            userId: args['userId'] as String,
-          ),
+          builder: (_) => ProfileSetupScreen(userId: args['userId'] as String),
         );
       case chat:
         final args = settings.arguments as Map<String, dynamic>;
@@ -199,9 +215,7 @@ class AppRoutes {
         );
       case profileView:
         final user = settings.arguments as UserModel;
-        return MaterialPageRoute(
-          builder: (_) => ProfileViewScreen(user: user),
-        );
+        return MaterialPageRoute(builder: (_) => ProfileViewScreen(user: user));
       case adminChat:
         final args = settings.arguments as Map<String, dynamic>?;
         if (args == null || !args.containsKey('recipientId')) {

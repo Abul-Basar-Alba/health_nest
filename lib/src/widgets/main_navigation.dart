@@ -403,7 +403,8 @@ class MainNavigationState extends State<MainNavigation> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
+                    icon: const Icon(Icons.notifications_outlined,
+                        color: Colors.black87),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -449,10 +450,77 @@ class MainNavigationState extends State<MainNavigation> {
               );
             },
           ),
+          // 3-dot settings menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) {
+              switch (value) {
+                case 'settings':
+                  Navigator.pushNamed(context, '/settings');
+                  break;
+                case 'help':
+                  Navigator.pushNamed(context, '/help-support');
+                  break;
+                case 'documentation':
+                  Navigator.pushNamed(context, '/documentation');
+                  break;
+                case 'admin':
+                  Navigator.pushNamed(context, '/admin');
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, size: 20, color: Colors.teal),
+                    SizedBox(width: 12),
+                    Text('Settings'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'help',
+                child: Row(
+                  children: [
+                    Icon(Icons.help_outline, size: 20, color: Colors.orange),
+                    SizedBox(width: 12),
+                    Text('Help & Support'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'documentation',
+                child: Row(
+                  children: [
+                    Icon(Icons.book, size: 20, color: Colors.blue),
+                    SizedBox(width: 12),
+                    Text('Documentation'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'admin',
+                child: Row(
+                  children: [
+                    Icon(Icons.admin_panel_settings,
+                        size: 20, color: Colors.red),
+                    SizedBox(width: 12),
+                    Text('Admin Panel'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
         elevation: 2,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       drawer: _buildNavigationDrawer(),
       body: IndexedStack(

@@ -1,9 +1,10 @@
 // lib/src/services/enhanced_auth_service.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../config/auth_colors.dart';
 
 class EnhancedAuthService {
@@ -453,6 +454,7 @@ class EnhancedAuthService {
     int? age,
     String? gender,
     String? activityLevel,
+    String? profileImageUrl,
   }) async {
     try {
       Map<String, dynamic> updates = {
@@ -465,6 +467,7 @@ class EnhancedAuthService {
       if (age != null) updates['age'] = age;
       if (gender != null) updates['gender'] = gender;
       if (activityLevel != null) updates['activityLevel'] = activityLevel;
+      if (profileImageUrl != null) updates['profileImageUrl'] = profileImageUrl;
 
       // Recalculate BMI if height and weight are provided
       if (height != null || weight != null) {

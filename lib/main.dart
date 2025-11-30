@@ -24,18 +24,28 @@ import 'src/providers/pregnancy_provider.dart'; // Pregnancy tracker
 import 'src/providers/recommendation_provider.dart';
 import 'src/providers/selected_exercise_provider.dart'; // নতুন provider
 import 'src/providers/step_provider.dart';
+import 'src/providers/theme_provider.dart'; // Theme Provider for Dark Mode
 import 'src/providers/user_provider.dart';
 import 'src/providers/water_reminder_provider.dart';
 import 'src/providers/women_health_provider.dart'; // Women's Health
 import 'src/providers/workout_history_provider.dart';
 import 'src/routes/app_routes.dart';
 import 'src/services/sleep_tracker_service.dart';
+import 'src/services/supabase_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // .env ফাইল লোড করা হবে সব প্ল্যাটফর্মে
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Supabase Storage
+  try {
+    await SupabaseStorageService().initialize();
+  } catch (e) {
+    print('⚠️ Supabase initialization failed: $e');
+    // Continue without Supabase
+  }
 
   // Initialize timezone for notifications
   tz.initializeTimeZones();
@@ -56,21 +66,25 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ), // Theme Provider - MUST BE FIRST
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
         ChangeNotifierProvider(create: (_) => StepProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(
-            create: (_) => AIChatbotProvider()), // AI Chatbot
+          create: (_) => AIChatbotProvider(),
+        ), // AI Chatbot
         ChangeNotifierProvider(create: (_) => RecommendationProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
         ChangeNotifierProvider(create: (_) => ExerciseProvider()),
         ChangeNotifierProvider(create: (_) => SelectedExerciseProvider()),
         ChangeNotifierProvider(
-            create: (_) =>
-                WorkoutHistoryProvider()), // এই লাইনটি যোগ করা হয়েছে
+          create: (_) => WorkoutHistoryProvider(),
+        ), // এই লাইনটি যোগ করা হয়েছে
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => WaterReminderProvider()),
         ChangeNotifierProvider(create: (_) => MedicineReminderProvider()),
@@ -78,13 +92,33 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HealthDiaryProvider()),
         ChangeNotifierProvider(create: (_) => DrugInteractionProvider()),
         ChangeNotifierProvider(
-            create: (_) => PregnancyProvider()), // Pregnancy Tracker
+          create: (_) => PregnancyProvider(),
+        ), // Pregnancy Tracker
         ChangeNotifierProvider(
-            create: (_) => WomenHealthProvider()), // Women's Health Tracker
+          create: (_) => WomenHealthProvider(),
+        ), // Women's Health Tracker
       ],
-      child: MaterialApp(
-        title: 'HealthNest',
-        debugShowCheckedModeBanner: false,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'HealthNest',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeProvider.lightTheme,
+            darkTheme: ThemeProvider.darkTheme,
+            themeMode:
+                themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            initialRoute: AppRoutes.splash,
+            routes: AppRoutes.routes,
+            onGenerateRoute: AppRoutes.onGenerateRoute,
+          );
+        },
+      ),
+    );
+  }
+}
+
+/*
+// OLD THEME CODE - REPLACED BY ThemeProvider
         theme: ThemeData(
           primarySwatch: Colors.green,
           scaffoldBackgroundColor: Colors.white,
@@ -165,10 +199,4 @@ class MyApp extends StatelessWidget {
                 fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
-        initialRoute: AppRoutes.splash,
-        routes: AppRoutes.routes,
-        onGenerateRoute: AppRoutes.onGenerateRoute,
-      ),
-    );
-  }
-}
+*/
