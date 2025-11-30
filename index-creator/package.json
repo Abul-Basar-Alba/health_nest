@@ -1,0 +1,12 @@
+{
+  "name": "firestore-index-creator",
+  "version": "1.0.0",
+  "description": "Create Firestore composite indexes programmatically",
+  "main": "create_indexes.js",
+  "scripts": {
+    "create-indexes": "node create_indexes.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
