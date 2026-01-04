@@ -18,6 +18,7 @@ import 'package:health_nest/src/screens/profile_screen.dart';
 import 'package:health_nest/src/screens/recommendation_screen.dart';
 import 'package:health_nest/src/screens/step_counter_dashboard_screen.dart';
 import 'package:health_nest/src/services/admin_service.dart';
+import 'package:health_nest/src/services/alarm_permission_service.dart';
 import 'package:provider/provider.dart';
 
 // Simple Draggable FAB for MainNavigation
@@ -292,7 +293,7 @@ class MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     // Initialize notifications and load pregnancy data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final notificationProvider =
           Provider.of<NotificationProvider>(context, listen: false);
@@ -305,6 +306,13 @@ class MainNavigationState extends State<MainNavigation> {
 
         // Load active pregnancy data
         pregnancyProvider.loadActivePregnancy(userProvider.user!.id);
+
+        // Request alarm permissions for reminders (Android 12+)
+        try {
+          await AlarmPermissionService.requestAllPermissions(context);
+        } catch (e) {
+          print('Error requesting alarm permissions: $e');
+        }
       }
     });
   }

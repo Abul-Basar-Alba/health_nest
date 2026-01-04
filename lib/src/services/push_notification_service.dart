@@ -23,7 +23,20 @@ class PushNotificationService {
 
     // Initialize local notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
+
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'health_nest_channel',
+      'Health Notifications',
+      description: 'Notifications for health updates and reminders',
+      importance: Importance.max,
+    );
+
+    await _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
@@ -48,8 +61,12 @@ class PushNotificationService {
         AndroidNotificationDetails(
       'health_nest_channel', // Channel ID
       'Health Notifications', // Channel name
+      channelDescription: 'Notifications for health updates and reminders',
       importance: Importance.max,
       priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      icon: '@mipmap/launcher_icon',
     );
 
     const NotificationDetails platformChannelDetails =

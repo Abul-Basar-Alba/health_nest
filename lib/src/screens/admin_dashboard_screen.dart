@@ -753,24 +753,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 return const Center(child: CircularProgressIndicator());
               }
 
-              return Card(
+              return const Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Feature Usage Today',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      const Text('Calculator Uses: 1,234'),
-                      const Text('AI Chat Messages: 5,678'),
-                      const Text('Nutrition Logs: 890'),
-                      const Text('Community Posts: 123'),
+                      SizedBox(height: 12),
+                      Text('Calculator Uses: 1,234'),
+                      Text('AI Chat Messages: 5,678'),
+                      Text('Nutrition Logs: 890'),
+                      Text('Community Posts: 123'),
                     ],
                   ),
                 ),
@@ -1402,132 +1402,197 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(headerIcon, color: headerColor),
-            const SizedBox(width: 8),
-            const Text('Transaction Details'),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header card with main info
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: headerColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: headerColor.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _getEventTitle(event),
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Fixed header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(headerIcon, color: headerColor, size: 28),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Transaction Details',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: headerColor,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      if (paymentData['amount'] != null)
-                        Text(
-                          '৳${paymentData['amount']}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+              // Scrollable content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header card with main info
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: headerColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: headerColor.withOpacity(0.3)),
                         ),
-                      if (paymentData['plan'] != null)
-                        Text(
-                          '${paymentData['plan']} Plan',
-                          style: const TextStyle(fontSize: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getEventTitle(event),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: headerColor,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            if (paymentData['amount'] != null)
+                              Text(
+                                '৳${paymentData['amount']}',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            if (paymentData['plan'] != null)
+                              Text(
+                                '${paymentData['plan']} Plan',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Details sections
+                      _buildDetailSection('Transaction Info', {
+                        'Event': event,
+                        'Transaction ID': paymentData['tran_id'] ??
+                            paymentData['tranId'] ??
+                            'N/A',
+                        'Session Key': paymentData['sessionkey'] ?? 'N/A',
+                        'Status': _getStatusText(event),
+                      }),
+
+                      const SizedBox(height: 12),
+                      _buildDetailSection('Payment Info', {
+                        'Amount': paymentData['amount'] != null
+                            ? '৳${paymentData['amount']}'
+                            : 'N/A',
+                        'Method': paymentData['method'] ?? 'N/A',
+                        'Plan': paymentData['plan'] ?? 'N/A',
+                        'Currency': paymentData['currency'] ?? 'BDT',
+                      }),
+
+                      const SizedBox(height: 12),
+                      _buildDetailSection('User Info', {
+                        'User ID': paymentData['userId'] ?? 'N/A',
+                        'Customer Email': paymentData['customerEmail'] ?? 'N/A',
+                        'Customer Name': paymentData['customerName'] ?? 'N/A',
+                      }),
+
+                      const SizedBox(height: 12),
+                      _buildDetailSection('Timestamps', {
+                        'Transaction Date': paymentData['timestamp'] != null
+                            ? (paymentData['timestamp'] as Timestamp)
+                                .toDate()
+                                .toString()
+                                .substring(0, 19)
+                            : 'N/A',
+                        'Trial End Date': paymentData['trialEndDate'] != null
+                            ? (paymentData['trialEndDate'] as Timestamp)
+                                .toDate()
+                                .toString()
+                                .substring(0, 19)
+                            : 'N/A',
+                      }),
+
+                      if (paymentData['gateway_url'] != null) ...[
+                        const SizedBox(height: 12),
+                        _buildDetailSection('Gateway Info', {
+                          'Gateway URL': paymentData['gateway_url'],
+                          'Store ID': paymentData['store_id'] ?? 'N/A',
+                        }),
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Details sections
-                _buildDetailSection('Transaction Info', {
-                  'Event': event,
-                  'Transaction ID':
-                      paymentData['tran_id'] ?? paymentData['tranId'] ?? 'N/A',
-                  'Session Key': paymentData['sessionkey'] ?? 'N/A',
-                  'Status': _getStatusText(event),
-                }),
-
-                const SizedBox(height: 12),
-                _buildDetailSection('Payment Info', {
-                  'Amount': paymentData['amount'] != null
-                      ? '৳${paymentData['amount']}'
-                      : 'N/A',
-                  'Method': paymentData['method'] ?? 'N/A',
-                  'Plan': paymentData['plan'] ?? 'N/A',
-                  'Currency': paymentData['currency'] ?? 'BDT',
-                }),
-
-                const SizedBox(height: 12),
-                _buildDetailSection('User Info', {
-                  'User ID': paymentData['userId'] ?? 'N/A',
-                  'Customer Email': paymentData['customerEmail'] ?? 'N/A',
-                  'Customer Name': paymentData['customerName'] ?? 'N/A',
-                }),
-
-                const SizedBox(height: 12),
-                _buildDetailSection('Timestamps', {
-                  'Transaction Date': paymentData['timestamp'] != null
-                      ? (paymentData['timestamp'] as Timestamp)
-                          .toDate()
-                          .toString()
-                          .substring(0, 19)
-                      : 'N/A',
-                  'Trial End Date': paymentData['trialEndDate'] != null
-                      ? (paymentData['trialEndDate'] as Timestamp)
-                          .toDate()
-                          .toString()
-                          .substring(0, 19)
-                      : 'N/A',
-                }),
-
-                if (paymentData['gateway_url'] != null) ...[
-                  const SizedBox(height: 12),
-                  _buildDetailSection('Gateway Info', {
-                    'Gateway URL': paymentData['gateway_url'],
-                    'Store ID': paymentData['store_id'] ?? 'N/A',
-                  }),
-                ],
-              ],
-            ),
+              ),
+              // Fixed footer buttons
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                    if (event == 'payment_success') ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _sendTransactionReceipt(paymentData);
+                        },
+                        icon: const Icon(Icons.receipt, size: 16),
+                        label: const Text('Receipt'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          if (event == 'payment_success')
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _sendTransactionReceipt(paymentData);
-              },
-              icon: const Icon(Icons.receipt, size: 16),
-              label: const Text('Send Receipt'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -1637,10 +1702,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
   // Messages Tab - Admin inbox for user messages
   Widget _buildMessagesTab() {
-    const String adminId = 'SZQYWWWw28fza8MiWYep8snmcox1';
-
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('adminChats').snapshots(),
+      stream: _firestore
+          .collection('messages')
+          .where('isAdminMessage', isEqualTo: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -1653,6 +1719,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   'Error loading messages',
                   style: TextStyle(fontSize: 18, color: Colors.red[600]),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  '${snapshot.error}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           );
@@ -1662,9 +1734,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
-        final chatRooms = snapshot.data!.docs;
+        // Get all messages and sort manually
+        final allMessages = snapshot.data!.docs;
+        final Map<String, Map<String, dynamic>> uniqueUsers = {};
 
-        if (chatRooms.isEmpty) {
+        // Group by userId and keep the most recent message
+        for (var doc in allMessages) {
+          final data = doc.data() as Map<String, dynamic>;
+          final userId = data['userId'] as String?;
+          final timestamp = data['timestamp'] as Timestamp?;
+
+          if (userId != null && userId.isNotEmpty && timestamp != null) {
+            // If user not in map or this message is newer
+            if (!uniqueUsers.containsKey(userId)) {
+              uniqueUsers[userId] = {
+                'data': data,
+                'timestamp': timestamp.toDate(),
+              };
+            } else {
+              final existingTimestamp =
+                  uniqueUsers[userId]!['timestamp'] as DateTime;
+              if (timestamp.toDate().isAfter(existingTimestamp)) {
+                uniqueUsers[userId] = {
+                  'data': data,
+                  'timestamp': timestamp.toDate(),
+                };
+              }
+            }
+          }
+        }
+
+        if (uniqueUsers.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1689,24 +1789,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           );
         }
 
+        // Sort users by most recent message
+        final sortedUsers = uniqueUsers.entries.toList()
+          ..sort((a, b) {
+            final aTime = a.value['timestamp'] as DateTime;
+            final bTime = b.value['timestamp'] as DateTime;
+            return bTime.compareTo(aTime); // Descending order
+          });
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: chatRooms.length,
+          itemCount: sortedUsers.length,
           itemBuilder: (context, index) {
-            final chatRoomId = chatRooms[index].id;
+            final userId = sortedUsers[index].key;
+            final messageData =
+                sortedUsers[index].value['data'] as Map<String, dynamic>;
 
-            // Extract user ID from chatRoomId (format: userId_adminId or adminId_userId)
-            final parts = chatRoomId.split('_');
-            final userId = parts[0] == adminId ? parts[1] : parts[0];
-
-            return _buildMessagePreviewCard(userId, chatRoomId);
+            return _buildMessagePreviewCardFromMessage(userId, messageData);
           },
         );
       },
     );
   }
 
-  Widget _buildMessagePreviewCard(String userId, String chatRoomId) {
+  Widget _buildMessagePreviewCardFromMessage(
+      String userId, Map<String, dynamic> lastMessageData) {
     return FutureBuilder<DocumentSnapshot>(
       future: _firestore.collection('users').doc(userId).get(),
       builder: (context, userSnapshot) {
@@ -1723,136 +1830,116 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         final userName = userData?['name'] ?? 'Unknown User';
         final userEmail = userData?['email'] ?? '';
 
-        return StreamBuilder<QuerySnapshot>(
-          stream: _firestore
-              .collection('adminChats')
-              .doc(chatRoomId)
-              .collection('messages')
-              .orderBy('timestamp', descending: true)
-              .limit(1)
-              .snapshots(),
-          builder: (context, messageSnapshot) {
-            String lastMessage = 'No messages yet';
-            String timeAgo = '';
-            bool hasUnread = false;
+        final lastMessage = lastMessageData['message'] ?? 'No message';
+        final timestamp = lastMessageData['timestamp'] as Timestamp?;
+        final isRead = lastMessageData['isRead'] ?? false;
+        final hasUnread = !isRead;
 
-            if (messageSnapshot.hasData &&
-                messageSnapshot.data!.docs.isNotEmpty) {
-              final lastMsg = messageSnapshot.data!.docs.first.data()
-                  as Map<String, dynamic>;
-              lastMessage = lastMsg['text'] ?? 'No text';
-              final timestamp = lastMsg['timestamp'] as Timestamp?;
-              if (timestamp != null) {
-                timeAgo = _formatTime(timestamp);
-              }
+        String timeAgo = '';
+        if (timestamp != null) {
+          timeAgo = _formatTime(timestamp);
+        }
 
-              // Check if message is from user (not admin)
-              const String adminId = 'SZQYWWWw28fza8MiWYep8snmcox1';
-              hasUnread = lastMsg['senderId'] != adminId;
-            }
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              elevation: hasUnread ? 4 : 2,
-              child: ListTile(
-                leading: Stack(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.blue[100],
-                      child: Text(
-                        userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: hasUnread ? 4 : 2,
+          child: ListTile(
+            leading: Stack(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.blue[100],
+                  child: Text(
+                    userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
                     ),
-                    if (hasUnread)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                title: Text(
-                  userName,
-                  style: TextStyle(
-                    fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userEmail,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      lastMessage,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight:
-                            hasUnread ? FontWeight.w600 : FontWeight.normal,
-                        color: hasUnread ? Colors.black87 : Colors.grey[600],
+                if (hasUnread)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
                     ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (timeAgo.isNotEmpty)
-                      Text(
-                        timeAgo,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: hasUnread ? Colors.blue : Colors.grey[500],
-                          fontWeight:
-                              hasUnread ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    if (hasUnread) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'NEW',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                onTap: () => _messageUser(userId, userName),
+                  ),
+              ],
+            ),
+            title: Text(
+              userName,
+              style: TextStyle(
+                fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
               ),
-            );
-          },
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (userEmail.isNotEmpty)
+                  Text(
+                    userEmail,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  lastMessage,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
+                    color: hasUnread ? Colors.black87 : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (timeAgo.isNotEmpty)
+                  Text(
+                    timeAgo,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: hasUnread ? Colors.blue : Colors.grey[500],
+                      fontWeight:
+                          hasUnread ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                if (hasUnread) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'NEW',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            onTap: () => _messageUser(userId, userName),
+          ),
         );
       },
     );

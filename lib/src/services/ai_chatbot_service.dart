@@ -16,7 +16,7 @@ class AIChatbotService {
     } else if (Platform.isAndroid || Platform.isIOS) {
       // Use your computer's local IP address
       // Find it with: ip addr show (Linux) or ipconfig (Windows)
-      return 'http://192.168.0.108:5000';
+      return 'http://192.168.0.109:5000';
     } else {
       return 'http://localhost:5000';
     }
