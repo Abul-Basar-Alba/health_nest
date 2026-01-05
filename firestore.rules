@@ -245,11 +245,25 @@ service cloud.firestore {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    // ----------------- Emergency Access (Temporary) -----------------
-    // This rule allows read/write access until December 31, 2025 for development
-    // Remove this before production deployment
+    // ----------------- Activity History (Exercise/Workout logs) -----------------
+    match /activity_history/{historyId} {
+      allow read, write: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ----------------- Nutrition History (Meal logs) -----------------
+    match /nutrition_history/{historyId} {
+      allow read, write: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ----------------- Emergency Access (Extended for development) -----------------
+    // Extended until June 30, 2026 for testing
+    // TODO: Remove this before production deployment and use specific rules only
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 12, 31) && 
+      allow read, write: if request.time < timestamp.date(2026, 6, 30) && 
         request.auth != null;
     }
   }

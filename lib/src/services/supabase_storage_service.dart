@@ -23,18 +23,25 @@ class SupabaseStorageService {
     }
 
     try {
+      // Supabase is currently disabled/unavailable
+      // Using Firebase Storage as fallback
+      print('⚠️ Supabase storage is disabled. Using Firebase Storage instead.');
+      _isInitialized = false;
+      return; // Skip Supabase initialization
+
+      /* Uncomment when Supabase is available:
       await Supabase.initialize(
-        url: 'https://ifarrmvatyygmasvtgxk.supabase.co',
-        anonKey:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYXJybXZhdHl5Z21hc3Z0Z3hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDg4MDcsImV4cCI6MjA4MDA4NDgwN30.IdcvqO_JDaxV-EUkFQrgqzCnN2mPglGMRxPALyff7Ls',
+        url: 'https://your-project.supabase.co',
+        anonKey: 'your-anon-key',
       );
       _supabase = Supabase.instance.client;
       _isInitialized = true;
       print('✅ Supabase initialized successfully');
+      */
     } catch (e) {
       print('❌ Supabase initialization error: $e');
       _isInitialized = false;
-      rethrow;
+      // Don't rethrow - allow app to continue with Firebase
     }
   }
 

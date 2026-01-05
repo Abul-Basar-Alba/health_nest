@@ -179,7 +179,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   radius: 46,
                   backgroundColor: Colors.green[100],
                   backgroundImage: user.profileImageUrl != null
-                      ? NetworkImage(user.profileImageUrl!)
+                      ? NetworkImage(
+                          '${user.profileImageUrl!}?t=${DateTime.now().millisecondsSinceEpoch}',
+                        )
                       : const AssetImage('assets/images/default_avatar.png')
                           as ImageProvider,
                 ),

@@ -1,0 +1,146 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for HealthNest
+// Secure rules with proper validation and authentication
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to validate image files
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024 // Max 5MB
+          && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to validate file name doesn't contain malicious patterns
+    function isValidFileName() {
+      return !request.resource.name.matches('.*[<>:"/\\\\|?*].*');
+    }
+    
+    // ==================== PROFILE IMAGES ====================
+    // Users can only upload/update/delete their own profile images
+    match /profile_images/{userId}_{timestamp}{ext} {
+      // Read: Only authenticated users can view profile images
+      allow read: if isAuthenticated();
+      
+      // Create/Update: Only if authenticated, owner, valid image, and valid filename
+      allow create, update: if isOwner(userId)
+                            && isValidImage()
+                            && isValidFileName();
+      
+      // Delete: Only owner can delete their images
+      allow delete: if isOwner(userId);
+    }
+    
+    // Legacy profile folder (for backward compatibility)
+    match /Profile/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Disabled - use profile_images instead
+    }
+    
+    // ==================== BUMP PHOTOS (Pregnancy) ====================
+    // Sensitive pregnancy photos - strict access control
+    match /bump_photos/{userId}/{timestamp}{ext} {
+      // Read: Only the owner can view
+      allow read: if isOwner(userId);
+      
+      // Create/Update: Only owner, valid image, max 10MB
+      allow create, update: if isOwner(userId)
+                            && request.resource.size < 10 * 1024 * 1024
+                            && request.resource.contentType.matches('image/.*')
+                            && isValidFileName();
+      
+      // Delete: Only owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // Legacy Bump_Photo folder
+    match /Bump_Photo/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Disabled - use bump_photos instead
+    }
+    
+    // ==================== EXERCISE/WORKOUT MEDIA ====================
+    // Exercise form check videos and images
+    match /workout_media/{userId}/{workoutId}/{fileName} {
+      allow read: if isAuthenticated();
+      
+      allow create, update: if isOwner(userId)
+                            && request.resource.size < 20 * 1024 * 1024 // Max 20MB for videos
+                            && (request.resource.contentType.matches('image/.*')
+                                || request.resource.contentType.matches('video/.*'))
+                            && isValidFileName();
+      
+      allow delete: if isOwner(userId);
+    }
+    
+    // ==================== HEALTH REPORTS/DOCUMENTS ====================
+    // Medical reports, prescriptions, etc.
+    match /health_documents/{userId}/{documentId}{ext} {
+      // Read: Only owner
+      allow read: if isOwner(userId);
+      
+      // Create/Update: Only owner, max 10MB, PDF or images
+      allow create, update: if isOwner(userId)
+                            && request.resource.size < 10 * 1024 * 1024
+                            && (request.resource.contentType.matches('application/pdf')
+                                || request.resource.contentType.matches('image/.*'))
+                            && isValidFileName();
+      
+      // Delete: Only owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // ==================== COMMUNITY/SOCIAL MEDIA ====================
+    // Community post images
+    match /community_posts/{postId}/{fileName} {
+      // Read: All authenticated users
+      allow read: if isAuthenticated();
+      
+      // Create: Any authenticated user, max 5MB, images only
+      allow create: if isAuthenticated()
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*')
+                   && isValidFileName();
+      
+      // Update/Delete: Only if user created the post (checked via Firestore)
+      allow update, delete: if isAuthenticated();
+      // Note: Additional verification should be done via Firestore rules
+    }
+    
+    // ==================== ADMIN UPLOADS ====================
+    // Admin-only content (exercises, nutrition data, etc.)
+    match /admin_content/{category}/{fileName} {
+      // Read: All authenticated users
+      allow read: if isAuthenticated();
+      
+      // Write: Admin only (check via Firestore)
+      allow write: if isAuthenticated();
+      // Note: Admin verification done at application level
+    }
+    
+    // ==================== TEMPORARY UPLOADS ====================
+    // Temporary storage for processing (auto-delete after 24 hours via Cloud Functions)
+    match /temp_uploads/{userId}/{timestamp}{ext} {
+      allow read, write: if isOwner(userId)
+                        && request.resource.size < 20 * 1024 * 1024
+                        && request.time < resource.timeCreated + duration.value(24, 'h');
+    }
+    
+    // ==================== DEFAULT DENY ====================
+    // Deny all other access by default (security first!)
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

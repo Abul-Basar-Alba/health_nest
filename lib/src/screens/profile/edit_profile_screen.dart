@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:health_nest/src/config/auth_colors.dart';
 import 'package:health_nest/src/providers/user_provider.dart';
 import 'package:health_nest/src/services/enhanced_auth_service.dart';
+import 'package:health_nest/src/services/firebase_storage_service.dart';
 import 'package:health_nest/src/services/supabase_storage_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +21,8 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _authService = EnhancedAuthService();
-  final _storageService = SupabaseStorageService();
+  final _supabaseStorage = SupabaseStorageService();
+  final _firebaseStorage = FirebaseStorageService();
   final _imagePicker = ImagePicker();
 
   late TextEditingController _nameController;
@@ -171,13 +173,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         print('   Current image URL: $_currentImageUrl');
         print('   User ID: $userId');
 
-        newImageUrl = await _storageService.updateProfileImage(
-          userId: userId,
-          newImageFile: _selectedImage!,
-          oldImageUrl: _currentImageUrl,
-        );
-
-        print('✅✅✅ Image uploaded successfully: $newImageUrl');
+        // Try Firebase Storage (more reliable)
+        try {
+          newImageUrl = await _firebaseStorage.updateProfileImage(
+            userId: userId,
+            newImageFile: _selectedImage!,
+            oldImageUrl: _currentImageUrl,
+          );
+          print('✅ Image uploaded via Firebase Storage: $newImageUrl');
+        } catch (firebaseError) {
+          print('⚠️ Firebase upload failed, trying Supabase: $firebaseError');
+          // Fallback to Supabase if Firebase fails
+          newImageUrl = await _supabaseStorage.updateProfileImage(
+            userId: userId,
+            newImageFile: _selectedImage!,
+            oldImageUrl: _currentImageUrl,
+          );
+          print('✅ Image uploaded via Supabase: $newImageUrl');
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -221,6 +234,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (mounted) {
       if (result['success']) {
+        // Clear image cache to show new image immediately
+        if (newImageUrl != null && newImageUrl != _currentImageUrl) {
+          imageCache.clear();
+          imageCache.clearLiveImages();
+        }
+
         // Refresh user data
         await userProvider.refreshUser();
 
@@ -255,14 +274,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         foregroundColor: Colors.black87,
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFFE3FDFD), // Mint
-              const Color(0xFFA6E3E9), // Teal
-              const Color(0xFF71C9CE), // Light blue
+              Color(0xFFE3FDFD), // Mint
+              Color(0xFFA6E3E9), // Teal
+              Color(0xFF71C9CE), // Light blue
             ],
           ),
         ),
@@ -336,8 +355,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     : _currentImageUrl != null &&
                                             _currentImageUrl!.isNotEmpty
                                         ? Image.network(
-                                            _currentImageUrl!,
+                                            '${_currentImageUrl!}?t=${DateTime.now().millisecondsSinceEpoch}',
                                             fit: BoxFit.cover,
+                                            loadingBuilder: (context, child,
+                                                loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            },
                                             errorBuilder:
                                                 (context, error, stackTrace) {
                                               return Container(
@@ -568,7 +596,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AuthColors.accentBlue, width: 2),
+          borderSide: const BorderSide(color: AuthColors.accentBlue, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -663,8 +691,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: DropdownButtonFormField<String>(
             initialValue: _selectedActivityLevel,
             decoration: InputDecoration(
-              prefixIcon:
-                  Icon(Icons.fitness_center, color: AuthColors.accentBlue),
+              prefixIcon: const Icon(Icons.fitness_center,
+                  color: AuthColors.accentBlue),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
