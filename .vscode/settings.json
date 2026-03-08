@@ -23,5 +23,17 @@
   },
   "dart.lineLength": 80,
   "dart.insertArgumentPlaceholders": false,
-  "firebase.hosting.source": "./build/web"
+  "firebase.hosting.source": "./build/web",
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "/usr/bin/bash",
+      "icon": "terminal-bash"
+    },
+    "zsh": {
+      "path": "flatpak-spawn",
+      "args": ["--host", "zsh"],
+      "icon": "terminal"
+    }
+  }
 }
